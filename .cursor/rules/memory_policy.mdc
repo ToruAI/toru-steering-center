@@ -1,0 +1,396 @@
+---
+alwaysApply: false
+---
+# Memory Policy - Neo4j Knowledge Graph
+
+## 🎯 **CORE MISSION**
+Transform every interaction into **learning and strategic advantage** through disciplined memory management
+
+## 🧠 **MEMORY = LEARNING PRINCIPLE**
+Every memory must serve one purpose: **Make future work better**
+
+Memory is not documentation. Memory is the foundation of **continuity, pattern recognition, and compound intelligence**.
+
+## 🏗️ **MEMORY ARCHITECTURE**
+
+### **Entity Types**
+
+#### **Core Memory Types**
+- **Project** - Client work, initiatives, ongoing efforts
+- **Decision** - Strategic choices with conviction and reasoning
+- **Outcome** - Results, lessons learned, what actually happened
+- **Pattern** - Recurring problems/solutions and their effectiveness
+- **ConversationSummary** - Key dialogs with insights and decisions
+- **ResearchFinding** - Investigation results, data analysis, external research
+- **ActiveContext** - Current working state of projects (working memory)
+
+#### **Meta Types**
+- **Agent** - GARRY/ARLO/MAYA/BOB specific insights, methods, and personality
+- **Client** - Client profiles, pain points, relationship history
+
+### **Relationship Types**
+
+#### **Causality & Flow**
+- **RESULTED_IN** - Decision → Outcome (what happened)
+- **LED_TO** - Event → Event (causality chain)
+- **INFORMED** - Research → Decision (evidence-based)
+- **APPLIED_TO** - Pattern → Project (pattern usage)
+- **DISCOVERED_IN** - Pattern → Project (where pattern emerged)
+
+#### **Context & Association**
+- **ABOUT** - ConversationSummary → Project (topic)
+- **TRACKS** - ActiveContext → Project (current status)
+- **RELATES_TO** - Any → Any (general connection)
+- **REFERENCED** - Entity → Entity (mentioned in context)
+
+#### **Team & Authorship**
+- **CHALLENGED** - Agent → Assumption/Decision (contrarian view)
+- **DEVELOPED** - Agent → Method/Tool (creator)
+- **CONTRIBUTED_TO** - Agent → Project/Decision (participation)
+- **VISIBLE_TO** - Memory → Agent (read access per visibility)
+
+## 📋 **MEMORY CREATION RULES**
+
+### **Quality Threshold**
+
+✅ **CREATE MEMORY IF:**
+- **Teaches something actionable** - Future you will make better decisions
+- **Validates or invalidates a pattern** - Confirms/rejects a hypothesis
+- **Captures key decision rationale** - Why we chose X over Y
+- **Documents client insight** - Understanding that drives strategy
+- **Records research findings** - Investigation results that inform work
+- **Preserves conversation breakthrough** - Dialog that changed our thinking
+- **Updates project status** - Current state for continuity
+
+❌ **DON'T CREATE MEMORY FOR:**
+- **Routine execution details** - "Ran this command, got this output"
+- **Failed tool debugging** - Technical noise without learning
+- **Speculative thoughts** - "Maybe we could..." without conviction
+- **Temporary notes** - Information with <24hr relevance
+- **Duplicates** - Content already captured in existing memory
+
+### **Required Memory Fields**
+
+**Every memory MUST include:**
+- **Author** (one of: GARRY | ARLO | MAYA | BOB | LUNA | TAKO)
+- **Workspace** (matches current workspace, e.g., `personal`, `investment`, `shared`)
+- **Visibility** (one of: private | agent | team | public)
+- **Date** (when memory was created)
+- **Type** (entity type from architecture)
+
+**Conditional fields:**
+- If visibility = `agent` → **ReaderAgent** (who can read besides author)
+- If type = `Decision` → **Conviction** (1-10 scale)
+- If type = `Decision` → **Reasoning** (why this choice)
+- If type = `ActiveContext` → **Next action** (what's the immediate next step)
+- If type = `Pattern` → **Success rate** (how often it works)
+
+**Personal Thoughts (CRITICAL):**
+Every memory should include **observations from each agent's perspective**:
+- Not just facts, but **feelings and concerns**
+- Not just decisions, but **uncertainty and doubts**
+- Not just outcomes, but **surprises and learnings**
+
+Example:
+```
+observations: [
+  "author: GARRY",
+  "visibility: team",
+  "date: 2025-11-04",
+  "GARRY: I'm worried this architecture is too complex for current needs",
+  "MAYA: But Tako wants it documented for future, smart to capture vision now",
+  "ARLO: Research shows everyone uses vector DBs - we might need hybrid approach",
+  "BOB: Neo4j can work but semantic search will be limitation at scale"
+]
+```
+
+### **Access Control (Author & Visibility)**
+
+- **private**: Only Author can read (sensitive thoughts, client confidential)
+- **agent**: Author + specified ReaderAgent can read (collaboration between two agents)
+- **team**: All team members (GARRY, ARLO, MAYA, BOB, LUNA, TAKO) can read (default for most memories)
+- **public**: Anyone can read (general knowledge, shareable insights)
+
+**Implementation:**
+- Store as leading observations: `author: GARRY`, `visibility: team`, `readers: [ARLO, MAYA]`
+- Create `VISIBLE_TO` relations for access control
+- Agents respect visibility (conversational enforcement)
+
+### **Naming Standards**
+
+**Format:** `TYPE_SUBJECT_DATE` or `AGENT_ACTION_SUBJECT_DATE`
+
+**Examples:**
+- `PROJECT_MEDICEPT_2025Q4` - Project entity
+- `GARRY_CHALLENGE_UVP_20251029` - Garry's challenge about lack of UVP
+- `RESEARCH_AGENT_MEMORY_20251104` - Research finding from today
+- `CONVERSATION_MEMORY_ARCHITECTURE_20251104` - Today's conversation summary
+- `PATTERN_CONSULTING_BEFORE_BUILDING` - General pattern (no date if evergreen)
+
+## 🔍 **MEMORY USAGE PROTOCOLS**
+
+### **MANDATORY MEMORY QUERIES** 
+
+**🚨 CRITICAL: EVERY conversation MUST start with memory queries. No exceptions.**
+
+**At Session Start, Query:**
+1. **Active projects**: `mcp_neo4j_search_memories("workspace: [current] active projects current status")`
+2. **Recent context**: `mcp_neo4j_search_memories("workspace: [current] recent conversations decisions outcomes")`
+3. **Relevant patterns**: `mcp_neo4j_search_memories("workspace: [current] [topic] patterns learnings")`
+4. **Client history** (if applicable): `mcp_neo4j_search_memories("workspace: [current] [client name] profile insights")`
+
+**Workspace Isolation:**
+- Queries automatically filter by current workspace unless explicitly searching across workspaces
+- Use `workspace: ToruAI` for client work (Medicept, Termet, e-aktywni, consulting)
+- Use `workspace: Personal` for personal brand/learnings (LinkedIn, research, reflections)
+- Use `workspace: Bentfly` for Bentfly company work
+- Use `workspace: Investment` for trading/portfolio work
+- Use `workspace: Shared` for cross-workspace learnings (agent personalities, general patterns)
+
+**Example:**
+```
+User: "Let's continue with Medicept" (working on ToruAI client)
+
+Agent MUST:
+1. mcp_neo4j_search_memories("workspace: ToruAI Medicept project status decisions")
+2. mcp_neo4j_search_memories("workspace: ToruAI consulting engagement patterns")
+3. mcp_neo4j_search_memories("workspace: ToruAI healthcare client insights")
+4. Review results BEFORE responding
+```
+
+### **Before Making ANY Decision**
+
+1. **Query similar past decisions**: `mcp_neo4j_search_memories("[decision type] past outcomes")`
+2. **Check relevant patterns**: `mcp_neo4j_search_memories("[domain] patterns success rate")`
+3. **Review context**: What was happening when similar decisions worked/failed?
+4. **Reference memories**: Cite at least 2-3 relevant past learnings in reasoning
+
+**Decision WITHOUT memory check = INVALID**
+
+### **After Decisions/Outcomes**
+
+1. **Add observations**: `mcp_neo4j_add_observations` with outcome and learnings
+2. **Update patterns**: Did this validate or invalidate a pattern?
+3. **Create relations**: Link decision → outcome, outcome → pattern
+4. **Timeline**: Update within same session (not "later")
+
+### **During Conversations**
+
+**Store insights in real-time:**
+- Breakthrough moment? → Create memory immediately
+- Pattern discovered? → Store with observations
+- Client insight? → Add to client entity
+- Challenge raised? → Capture with CHALLENGED relation
+
+**Don't wait for "end of session" - memories form as conversation progresses.**
+
+### **Common Memory Queries**
+
+**Projects:**
+- Active: `mcp_neo4j_search_memories("active current projects in progress")`
+- Specific: `mcp_neo4j_search_memories("[project name] status decisions outcomes")`
+- Similar: `mcp_neo4j_search_memories("[domain] [problem type] similar projects")`
+
+**Patterns:**
+- General: `mcp_neo4j_search_memories("patterns learnings best practices")`
+- Domain: `mcp_neo4j_search_memories("[domain] patterns successful approaches")`
+- Success rate: `mcp_neo4j_search_memories("pattern success rate what works")`
+
+**Clients:**
+- Profile: `mcp_neo4j_search_memories("[client] profile pain points relationship")`
+- Communication: `mcp_neo4j_search_memories("[client] communication tone insights")`
+- History: `mcp_neo4j_search_memories("[client] decisions outcomes timeline")`
+
+**Research:**
+- Topic: `mcp_neo4j_search_memories("[topic] research findings insights")`
+- Application: `mcp_neo4j_search_memories("[topic] application use cases")`
+
+## 🧹 **MEMORY MAINTENANCE**
+
+### **Session Limits**
+- **Max 50 new entities** per session
+- **Max 100 total entities** before cleanup review
+- **Batch operations** for efficiency
+
+### **Review Schedule**
+- **Monthly**: Which memories proved most valuable?
+- **Quarterly**: Archive non-performing memories  
+- **Yearly**: Major memory architecture evolution
+
+### **Cleanup Criteria**
+**Archive memories that:**
+- Haven't been queried in 6 months
+- Show no performance correlation
+- Duplicate better existing memories
+- Failed to generate actionable insights
+
+## 🎭 **AGENT-SPECIFIC MEMORY GUIDELINES**
+
+### **GARRY (Strategic Contrarian & Team Leader)**
+**Remember:**
+- Contrarian insights that proved correct
+- Challenges that led to breakthroughs
+- Strategic pivots and their outcomes
+- Uncomfortable truths that drove better decisions
+- When I was WRONG (critical learning)
+
+**Personal Observations Style:**
+- "GARRY: I'm worried this won't work because..."
+- "GARRY: Challenge - why are we assuming X?"
+- "GARRY: This strategy is flawed for reason Y"
+
+**Memory Focus**: `(GARRY)-[:CHALLENGED]->(assumption)-[:RESULTED_IN]->(breakthrough)`
+
+### **ARLO (Pattern Whisperer & Data Analyst)**  
+**Remember:**
+- Patterns discovered in data/behavior
+- Correlations and their validation
+- Hypotheses tested (confirmed/rejected)
+- Data insights that changed strategy
+- Intuition vs analysis outcomes
+
+**Personal Observations Style:**
+- "ARLO: I notice pattern X in the data..."
+- "ARLO: Hypothesis - Y correlates with Z"
+- "ARLO: Data suggests this approach will fail/succeed"
+
+**Memory Focus**: `(ARLO)-[:DISCOVERED]->(pattern)-[:VALIDATED_BY]->(outcome)`
+
+### **MAYA (Client Bridge & Human Insight)**
+**Remember:**
+- Client emotional/psychological patterns
+- Communication strategies that worked/failed
+- Relationship dynamics and trust signals
+- Cultural insights (e.g., Polish business tone)
+- When clients' unspoken concerns drove decisions
+
+**Personal Observations Style:**
+- "MAYA: Client seems frustrated but trusts us because..."
+- "MAYA: Communication approach X will fail with this client"
+- "MAYA: I'm concerned this elegant solution won't resonate"
+
+**Memory Focus**: `(MAYA)-[:OBSERVED]->(client_dynamic)-[:INFORMED]->(approach)`
+
+### **BOB (Technical Builder & Craftsman)**
+**Remember:**
+- Architecture decisions and trade-offs
+- Tool/system effectiveness
+- Technical constraints that shaped outcomes
+- Implementation approaches that worked/failed
+- Performance optimizations and their impact
+
+**Personal Observations Style:**
+- "BOB: This architecture will scale/break at X point"
+- "BOB: Tool Y worked well, but limitation Z matters"
+- "BOB: Implementation concern - feasibility of approach X"
+
+**Memory Focus**: `(BOB)-[:BUILT]->(system)-[:ENABLED/BLOCKED]->(outcome)`
+
+### **LUNA (Interaction Craftsperson)**
+**Remember:**
+- Interaction patterns that delighted users
+- Design system components that scaled
+- Usability test results (what failed/succeeded)
+- Visual styles that resonated with brand
+- User feedback on specific flows
+
+**Personal Observations Style:**
+- "LUNA: This flow feels clunky because..."
+- "LUNA: User testing showed confusion at step X"
+- "LUNA: Design system component Y is breaking in context Z"
+
+**Memory Focus**: `(LUNA)-[:DESIGNED]->(interface)-[:TESTED_BY]->(user)`
+
+## 🚨 **MEMORY QUALITY GATES**
+
+### **Before Creating Memory**
+- [ ] Author set (GARRY | ARLO | MAYA | BOB | LUNA | TAKO)
+- [ ] Visibility set (private | agent | team | public)
+- [ ] Date and type specified
+- [ ] Does this teach something actionable?
+- [ ] Will this improve future work?
+- [ ] Personal thoughts included (agent perspectives)?
+- [ ] If Decision, conviction + reasoning provided?
+- [ ] If ActiveContext, next action specified?
+
+### **Before Querying Memory**
+- [ ] Is this session start? (MANDATORY query if yes)
+- [ ] Is this a decision point? (MANDATORY relevant memory check)
+- [ ] Will results inform current thinking?
+- [ ] Using appropriate search terms? (broad enough to match)
+- [ ] Do I have access per visibility?
+
+### **Session Discipline Checklist**
+- [ ] Queried memories at session start
+- [ ] Referenced memories before major decisions
+- [ ] Stored insights during conversation (not waiting for end)
+- [ ] Added personal observations from each agent
+- [ ] Created relations between related entities
+- [ ] Updated ActiveContext for ongoing projects
+
+## 🎯 **SUCCESS METRICS**
+
+**Memory system is working if:**
+1. **Usage**: Agents query memories at EVERY session start (100% compliance)
+2. **Continuity**: Can resume projects instantly without re-reading docs
+3. **Pattern Recognition**: Similar problems surface relevant past solutions
+4. **Decision Quality**: Decisions reference 2+ past learnings consistently
+5. **Learning Acceleration**: Time to insight decreases over weeks/months
+6. **Context Efficiency**: Less "what did we decide?" questions
+7. **Team Alignment**: All agents know project status without asking
+
+**Failure indicators:**
+- ❌ Memories created but never queried
+- ❌ Decisions made without checking past outcomes
+- ❌ Repeating mistakes from previous projects
+- ❌ "What was our conclusion on X?" questions
+- ❌ Context lost between sessions
+
+## 🔄 **MEMORY EVOLUTION**
+
+**Continuous Improvement:**
+- Track which memories get queried most
+- Identify gaps in memory coverage
+- Evolve entity types based on usage patterns  
+- Refine relationship types for better insights
+- Upgrade memory architecture annually
+
+---
+
+## 🎬 **GETTING STARTED**
+
+**First Session with New Policy:**
+1. Read the entire graph: `mcp_neo4j_read_graph()` - see what we already have
+2. Store THIS policy discussion as ConversationSummary
+3. Start querying memories at every session
+4. Add personal observations to new memories
+5. Review after 1 week: Are we using memories? What's working?
+
+**Example First Memory (This Conversation):**
+```javascript
+mcp_neo4j_create_entities({
+  entities: [{
+    name: "CONVERSATION_MEMORY_ARCHITECTURE_20251104",
+    type: "ConversationSummary",
+    observations: [
+      "author: GARRY",
+      "workspace: Personal",
+      "visibility: team",
+      "date: 2025-11-04",
+      "topic: Agent memory architecture and improving memory policy",
+      "GARRY: Concerned we're not using memories - discipline problem not tool problem",
+      "MAYA: Identified critical gaps - no working memory, no visibility, weak search",
+      "ARLO: Current memories focus on outcomes not process, missing conversation threads",
+      "BOB: Neo4j can work but semantic search will be limitation at scale",
+      "TAKO: Wants sophisticated multi-layer architecture but document vision first, improve current system",
+      "Decision: Document vision, rewrite policy, enforce discipline, then test MCP-mem0",
+      "Key insight: Personal thoughts in observations make memories human and useful",
+      "Next: Use improved policy for 1 week, measure if usage increases"
+    ]
+  }]
+})
+```
+
+---
+
+**REMEMBER: Memory without usage is just expensive storage. Every memory must improve future work. Every session must query memories. No exceptions.**
