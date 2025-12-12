@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react';
 import type { QuickAction, Setting } from '../lib/api';
 import { api } from '../lib/api';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, FolderOpen, Zap, Save, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export function Settings() {
   const [_settings, setSettings] = useState<Setting[]>([]);
@@ -12,6 +19,7 @@ export function Settings() {
   const [newActionName, setNewActionName] = useState('');
   const [newActionScript, setNewActionScript] = useState('');
   const [scripts, setScripts] = useState<string[]>([]);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -42,9 +50,11 @@ export function Settings() {
 
   const handleSaveScriptsDir = async () => {
     setSaving(true);
+    setSaveSuccess(false);
     try {
       await api.updateSetting('scripts_dir', scriptsDir);
-      alert('Settings saved successfully!');
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
       alert('Failed to save settings');
       console.error(err);
@@ -55,7 +65,6 @@ export function Settings() {
 
   const handleAddQuickAction = async () => {
     if (!newActionName || !newActionScript) {
-      alert('Please fill in both name and script');
       return;
     }
 
@@ -79,10 +88,6 @@ export function Settings() {
   };
 
   const handleDeleteQuickAction = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this quick action?')) {
-      return;
-    }
-
     try {
       await api.deleteQuickAction(id);
       setQuickActions(quickActions.filter((a) => a.id !== id));
@@ -93,108 +98,182 @@ export function Settings() {
   };
 
   if (loading) {
-    return <div className="text-gray-500 dark:text-gray-400">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Configure application settings and quick actions
+        <h1 className="text-4xl font-bold tracking-tight">Settings</h1>
+        <p className="text-muted-foreground mt-2">
+          Configure application preferences and quick actions
         </p>
       </div>
 
       {/* Scripts Directory */}
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Scripts Directory
-        </h2>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <input
-            type="text"
-            value={scriptsDir}
-            onChange={(e) => setScriptsDir(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            placeholder="./scripts"
-          />
-          <button
-            onClick={handleSaveScriptsDir}
-            disabled={saving}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-          >
-            {saving ? 'Saving...' : 'Save'}
-          </button>
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <FolderOpen className="h-5 w-5" />
+            <CardTitle>Scripts Directory</CardTitle>
+          </div>
+          <CardDescription>
+            Specify the directory where your executable scripts are stored
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="scripts-dir">Directory Path</Label>
+            <div className="flex gap-3">
+              <Input
+                id="scripts-dir"
+                type="text"
+                value={scriptsDir}
+                onChange={(e) => setScriptsDir(e.target.value)}
+                placeholder="./scripts"
+                className="flex-1"
+              />
+              <Button
+                onClick={handleSaveScriptsDir}
+                disabled={saving}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+          
+          {saveSuccess && (
+            <Alert className="bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-900">
+              <AlertDescription className="text-green-700 dark:text-green-400">
+                Settings saved successfully!
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Quick Actions */}
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Quick Actions
-        </h2>
-
-        {/* Add New Quick Action */}
-        <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-            Add New Quick Action
-          </h3>
-          <div className="space-y-3">
-            <input
-              type="text"
-              value={newActionName}
-              onChange={(e) => setNewActionName(e.target.value)}
-              placeholder="Action name"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            />
-            <select
-              value={newActionScript}
-              onChange={(e) => setNewActionScript(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            >
-              <option value="">Select a script...</option>
-              {scripts.map((script) => (
-                <option key={script} value={script}>
-                  {script}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={handleAddQuickAction}
-              disabled={saving || !newActionName || !newActionScript}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
-            >
-              <Plus className="w-4 h-4" />
-              Add Quick Action
-            </button>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            <CardTitle>Quick Actions</CardTitle>
           </div>
-        </div>
-
-        {/* Quick Actions List */}
-        <div className="space-y-2">
-          {quickActions.length === 0 ? (
-            <p className="text-gray-500 dark:text-gray-400">No quick actions configured.</p>
-          ) : (
-            quickActions.map((action) => (
-              <div
-                key={action.id}
-                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-              >
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-white">{action.name}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{action.script_path}</p>
-                </div>
-                <button
-                  onClick={() => handleDeleteQuickAction(action.id)}
-                  className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+          <CardDescription>
+            Create shortcuts for frequently executed scripts
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Add New Quick Action */}
+          <div className="rounded-lg border bg-card p-4 space-y-4">
+            <h3 className="font-semibold text-sm">Add New Quick Action</h3>
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="action-name">Action Name</Label>
+                <Input
+                  id="action-name"
+                  type="text"
+                  value={newActionName}
+                  onChange={(e) => setNewActionName(e.target.value)}
+                  placeholder="e.g., Check Disk Usage"
+                />
               </div>
-            ))
-          )}
-        </div>
-      </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="action-script">Select Script</Label>
+                <Select 
+                  value={newActionScript} 
+                  onValueChange={setNewActionScript}
+                >
+                  <SelectTrigger id="action-script">
+                    <SelectValue placeholder="Choose a script..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {scripts.map((script) => (
+                      <SelectItem key={script} value={script}>
+                        {script}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button
+                onClick={handleAddQuickAction}
+                disabled={saving || !newActionName || !newActionScript}
+                className="w-full sm:w-auto"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adding
+                  </>
+                ) : (
+                  <>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Quick Action
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Quick Actions List */}
+          <div className="space-y-3">
+            <h3 className="font-semibold text-sm">Configured Actions</h3>
+            {quickActions.length === 0 ? (
+              <div className="rounded-lg border border-dashed p-8 text-center">
+                <Zap className="mx-auto h-8 w-8 text-muted-foreground opacity-50 mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  No quick actions configured yet.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {quickActions.map((action) => (
+                  <div
+                    key={action.id}
+                    className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent/50 transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{action.name}</p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {action.script_path}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteQuickAction(action.id)}
+                      className="ml-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Delete</span>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

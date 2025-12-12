@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Terminal, Settings } from 'lucide-react';
+import { Home, Terminal, Settings, Activity } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { Separator } from '@/components/ui/separator';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -16,10 +17,10 @@ export function Layout({ children }: LayoutProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       {/* Mobile Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 md:hidden z-50">
-        <div className="flex justify-around">
+      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border md:hidden z-50 safe-area-inset-bottom">
+        <div className="flex justify-around items-center h-16">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -28,14 +29,14 @@ export function Layout({ children }: LayoutProps) {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  'flex flex-col items-center justify-center px-4 py-3 text-sm font-medium transition-colors',
+                  'flex flex-col items-center justify-center gap-1 px-3 py-2 flex-1 transition-colors rounded-lg',
                   isActive
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
                 )}
               >
-                <Icon className="w-5 h-5 mb-1" />
-                <span>{item.label}</span>
+                <Icon className="h-5 w-5" />
+                <span className="text-xs font-medium">{item.label}</span>
               </Link>
             );
           })}
@@ -43,48 +44,58 @@ export function Layout({ children }: LayoutProps) {
       </nav>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex md:flex-shrink-0">
-        <div className="flex flex-col w-64">
-          <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
-            <div className="flex items-center flex-shrink-0 px-4">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                Steering Center
-              </h1>
+      <aside className="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col">
+        <div className="flex flex-col flex-grow border-r border-border bg-card">
+          {/* Logo / Brand */}
+          <div className="flex items-center gap-3 px-6 py-6">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
+              <Activity className="h-6 w-6 text-primary-foreground" />
             </div>
-            <div className="mt-5 flex-grow flex flex-col">
-              <nav className="flex-1 px-2 space-y-1">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={cn(
-                        'group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors',
-                        isActive
-                          ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                      )}
-                    >
-                      <Icon className="mr-3 h-5 w-5" />
-                      {item.label}
-                    </Link>
-                  );
-                })}
-              </nav>
+            <div>
+              <h1 className="text-lg font-bold tracking-tight">Steering Center</h1>
+              <p className="text-xs text-muted-foreground">System Dashboard</p>
             </div>
+          </div>
+          
+          <Separator />
+
+          {/* Navigation */}
+          <nav className="flex-1 space-y-1 px-3 py-4">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={cn(
+                    'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
+                    isActive
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  )}
+                >
+                  <Icon className="h-5 w-5" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-border">
+            <p className="text-xs text-muted-foreground">
+              v1.0.0 • Open Source
+            </p>
           </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className="md:pl-64 flex flex-col flex-1">
-        <main className="flex-1 pb-20 md:pb-0">
-          <div className="py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              {children}
-            </div>
+      <div className="md:pl-64">
+        <main className="min-h-screen pb-20 md:pb-0">
+          <div className="container py-6 lg:py-8">
+            {children}
           </div>
         </main>
       </div>
