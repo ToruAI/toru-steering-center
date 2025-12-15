@@ -54,6 +54,11 @@ cargo build --release
 
 Open `http://localhost:3000`
 
+**Custom port:**
+```bash
+./target/release/steering-center --port 8080
+```
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -96,11 +101,26 @@ WantedBy=multi-user.target
 
 ## Configuration
 
+### CLI Options
+
+```bash
+steering-center [OPTIONS]
+
+Options:
+  -p, --port <PORT>    Port to listen on [default: 3000]
+  -H, --host <HOST>    Host to bind to [default: 127.0.0.1]
+  -h, --help           Print help message
+```
+
+### Environment Variables
+
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `STEERING_HOST` | `127.0.0.1` | Bind address (`0.0.0.0` for external) |
 | `STEERING_PORT` | `3000` | Server port |
 | `RUST_LOG` | `info` | Log level |
+
+CLI options take priority over environment variables.
 
 ## Project Structure
 
