@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Home, Terminal, Settings, Activity } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Separator } from '@/components/ui/separator';
+import { ToruLogo } from './ToruLogo';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -48,14 +49,8 @@ export function Layout({ children }: LayoutProps) {
       <aside className="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col">
         <div className="flex flex-col flex-grow border-r border-border bg-card">
           {/* Logo / Brand */}
-          <div className="flex items-center gap-3 px-6 py-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-              <Activity className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight">Steering Center</h1>
-              <p className="text-xs text-muted-foreground">System Dashboard</p>
-            </div>
+          <div className="px-6 py-6">
+            <ToruLogo size="md" showText={true} />
           </div>
           
           <Separator />
@@ -86,7 +81,7 @@ export function Layout({ children }: LayoutProps) {
           {/* Footer */}
           <div className="px-6 py-4 border-t border-border">
             <p className="text-xs text-muted-foreground">
-              v1.0.0 • Open Source
+              Steering Center
             </p>
           </div>
         </div>
