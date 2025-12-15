@@ -19,3 +19,5 @@ elif command -v pacman &> /dev/null; then
 else
     echo "Package manager not recognized. This script works with apt-get, yum, or pacman."
 fi
+
+

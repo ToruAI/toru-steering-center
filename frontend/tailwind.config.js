@@ -60,6 +60,18 @@ export default {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))',
         },
+        // ToruAI brand colors
+        toru: {
+          'primary': '#493FAA',
+          'primary-hover': '#7E64E7',
+          'offwhite': '#F9F9F9',
+          'accent-bg': '#F2F0FF',
+          'text-primary': '#191919',
+          'text-secondary': '#494949',
+        },
+      },
+      fontFamily: {
+        'montserrat': ['Montserrat', 'sans-serif'],
       },
       keyframes: {
         'accordion-down': {

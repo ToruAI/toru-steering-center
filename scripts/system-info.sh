@@ -15,3 +15,5 @@ free -h || echo "free command not available"
 echo ""
 echo "=== Disk Usage ==="
 df -h / | tail -1
+
+

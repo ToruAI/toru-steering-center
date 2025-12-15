@@ -15,6 +15,8 @@ export function Scripts() {
   const [scripts, setScripts] = useState<string[]>([]);
   const [selectedScript, setSelectedScript] = useState<string>('');
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
+  const [, setLoading] = useState(true);
+  const [, setError] = useState<Error | null>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
   
   const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/ws`;
@@ -23,6 +25,8 @@ export function Scripts() {
   useEffect(() => {
     const fetchScripts = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const scriptList = await api.listScripts();
         setScripts(scriptList);
         
@@ -35,6 +39,9 @@ export function Scripts() {
         }
       } catch (err) {
         console.error('Failed to fetch scripts:', err);
+        setError(err instanceof Error ? err : new Error('Failed to load scripts'));
+      } finally {
+        setLoading(false);
       }
     };
 

@@ -211,3 +211,5 @@ pub async fn delete_quick_action(pool: &DbPool, id: &str) -> Result<()> {
     conn.execute("DELETE FROM quick_actions WHERE id = ?1", params![id])?;
     Ok(())
 }
+
+
