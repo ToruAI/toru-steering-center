@@ -1,6 +1,6 @@
 ---
 created: 2025-12-15T09:58:30.000Z
-updated: 2025-12-15T10:20:05.901Z
+updated: 2025-12-16T10:40:37.514Z
 type: memory
 ---
 # Architectural Decisions
@@ -73,3 +73,62 @@ Implementing `rust-embed` solution.
 - Task ID and timestamps
 
 **Note**: Output is stored in SQLite. For long-running scripts with lots of output, this could grow the DB. Consider adding output truncation or retention policy in future versions.
+
+## 2025-12-16: Hybrid Authentication Implementation
+
+### Context
+User requested a simple authentication system with two roles: Admin (owner) and Client (viewer).
+
+### Decision
+Implemented a hybrid approach:
+- **Admin**: Authenticated via environment variables (`ADMIN_USERNAME`/`ADMIN_PASSWORD`). No database record for admin credentials to prevent lockout and maintain simplicity.
+- **Clients**: Authenticated via SQLite `users` table. Managed by Admin via UI.
+- **Session**: Expirable SQLite-backed sessions with HttpOnly cookies.
+
+### Consequences
+- **Security**: Improved. Dashboard is no longer public on localhost.
+- **UX**: Admin can now safely create restricted "view-only" accounts for clients.
+- **Complexity**: Added `argon2` dependency and auth middleware.
+
+
+## 2025-12-16T10:40:37.514Z
+## 2025-12-16: Authentication Security Hardening
+
+### Context
+Code review identified several security issues in the initial auth implementation.
+
+### Changes Made
+1. **Session Tokens**: Replaced UUID with 32-byte cryptographically secure random tokens
+2. **Rate Limiting**: Added exponential backoff (3→1min, 6→3min, 9→10min, 12→30min)
+3. **Login Audit**: New `login_attempts` table tracks all auth attempts with IP, timestamp, result
+4. **Secure Cookies**: Added `Secure` flag when `PRODUCTION` or `SECURE_COOKIES` env var is set
+5. **WebSocket Auth**: WS connections now require valid session cookie; only admins can run scripts
+6. **Password Validation**: Minimum 8 characters enforced on create/reset
+7. **Self-Service Password**: Users can change their own password via `/api/me/password`
+8. **Session Cleanup**: Expired sessions cleaned on server startup
+
+### Frontend Changes
+- Global 401 handler auto-redirects to login on session expiry
+- Login page shows lockout countdown timer
+- New LoginHistory component in Settings page
+- Mobile navigation replaced with Sheet component (slide-out drawer)
+
+### Security Trade-offs
+- Admin password still in env var (plaintext) - acceptable for self-hosted app where server access = full control anyway
+- No CSRF tokens - mitigated by SameSite=Strict cookies (upgraded from Lax in Round 2)
+
+## 2025-12-16: Security Hardening (Round 2)
+
+### Context
+Detailed security review revealed vulnerabilities (Timing attack, Rate limit bypass) after initial hardening.
+
+### Changes
+1. **Timing Attack Fix**: Implemented constant-time comparison for admin authentication.
+2. **IP Rate Limiting**: Added IP-based checks effectively mitigating username enumeration.
+3. **Session Security**: Upgraded to `SameSite=Strict` and added immediate invalidation on password change.
+4. **WebSocket**: Added periodic session re-validation.
+5. **Password Policy**: Enforced complexity (Upper, Lower, Number, Special).
+
+### Revised Trade-offs
+- **SameSite=Strict**: Improved CSRF protection but requires re-login when navigating from external sources (e.g. email links).
+- **Complexity**: Added `subtle` dependency and stricter policies.

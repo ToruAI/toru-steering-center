@@ -1,6 +1,6 @@
 ---
 created: 2025-12-15T09:25:00.585Z
-updated: 2025-12-15T10:20:09.205Z
+updated: 2025-12-16T12:03:16.833Z
 type: context
 ---
 # Backend Context
@@ -66,3 +66,25 @@ pub type TaskRegistry = Arc<Mutex<HashMap<String, Arc<Mutex<Option<Child>>>>>>;
 - `STEERING_HOST`: Bind address (default: 127.0.0.1)
 - `STEERING_PORT`: Port (default: 3000)
 - `RUST_LOG`: Log level filter
+
+
+## 2025-12-16T12:03:16.833Z
+## Database Tables
+- settings: Key-value config
+- task_history: Execution logs
+- quick_actions: User-defined scripts
+- **users**: Client credentials (Argon2 hashes)
+- **sessions**: Active web sessions (server-side)
+- **login_attempts**: Rate limiting and security audit
+
+## WebSocket Protocol
+- **Authentication**: Usage requires valid Session cookie (checked on handshake & periodically).
+- **Permissions**:
+  - `run`: Admins (Any script), Clients (Only Registered Quick Actions).
+  - `cancel`: Own tasks.
+
+## Environment Variables
+- `ADMIN_USERNAME`: Admin username (default: "admin")
+- `ADMIN_PASSWORD`: **REQUIRED** Admin password
+- `PRODUCTION`: Enable Secure cookies (1/true)
+- `STEERING_HOST` / `STEERING_PORT`: Network binding

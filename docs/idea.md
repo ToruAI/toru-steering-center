@@ -8,7 +8,7 @@ The user needs a self-hosted "Steering Center" application running on a VPS to m
 
   * **Next.js / Refine / Supabase:** Proven to be too resource-heavy (high RAM usage), complex to self-host (requires multi-container Docker setups), and introduces unnecessary boilerplate for a single-user tool.
   * **Low-Code Tools (Budibase/Directus):** While useful, they lack the "native" feel, are not optimized for specific mobile workflows, and introduce abstraction layers that make direct OS-level control (shell commands) cumbersome.
-  * **Authentication:** Maintaining a custom auth system (JWTs, Sessions, Database Users) is a security risk and development burden for a personal tool.
+  * **Authentication:** Originally planned to offload to Cloudflare Zero Trust. **Update (Dec 2025):** We implemented a custom **Hybrid Authentication System** (Env vars for Admin, SQLite for Clients) to allow standalone self-hosting without external dependencies.
 
 **Core Requirements:**
 
@@ -33,8 +33,9 @@ To solve for efficiency and control, we are adopting a **"Monolithic Binary"** a
       * *Why:* React offers the best ecosystem for UI components. Vite provides a fast build process. `shadcn/ui` (built on Tailwind) ensures the app looks professional and works on mobile devices immediately without writing custom CSS from scratch.
   * **Database: SQLite**
       * *Why:* We need a place to store "pinned data" and logs. A serverless, file-based database avoids the need for a separate Docker container (Postgres/MySQL).
-  * **Security: Cloudflare Zero Trust (Tunnel)**
-      * *Why:* Instead of implementing login logic in Rust, we place the app behind a Cloudflare Tunnel. Cloudflare handles the Identity Provider (Google/Email) and only forwards requests to the app if the user is authenticated. The app assumes all incoming traffic is trusted.
+  * **Security: Hybrid Authentication (Self-Hosted)**
+      * *Why:* To provide a complete "binary-only" experience without requiring external infrastructure setup.
+      * *Implementation:* Admin authenticated via Environment Variables (root access). Read-only/Restricted users authenticated via SQLite database. Stateless-style sessions with HttpOnly cookies.
 
 ### System Diagram
 

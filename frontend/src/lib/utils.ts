@@ -36,4 +36,29 @@ export function formatBytes(bytes: number): string {
   return `${size.toFixed(2)} ${units[unitIndex]}`;
 }
 
+export function generateStrongPassword(): string {
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+  let password = "";
+  // Ensure at least one of each required type
+  password += "ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(Math.floor(Math.random() * 26));
+  password += "abcdefghijklmnopqrstuvwxyz".charAt(Math.floor(Math.random() * 26));
+  password += "0123456789".charAt(Math.floor(Math.random() * 10));
+  password += "!@#$%^&*()_+".charAt(Math.floor(Math.random() * 12));
+  
+  // Fill the rest
+  for (let i = 4; i < 16; i++) {
+    password += charset.charAt(Math.floor(Math.random() * charset.length));
+  }
+  
+  // Shuffle
+  return password.split('').sort(() => 0.5 - Math.random()).join('');
+}
 
+export function validatePasswordStrength(password: string): { valid: boolean; message?: string } {
+  if (password.length < 8) return { valid: false, message: "Too short (min 8 chars)" };
+  if (!/[A-Z]/.test(password)) return { valid: false, message: "Missing uppercase letter" };
+  if (!/[a-z]/.test(password)) return { valid: false, message: "Missing lowercase letter" };
+  if (!/[0-9]/.test(password)) return { valid: false, message: "Missing number" };
+  if (!/[^A-Za-z0-9]/.test(password)) return { valid: false, message: "Missing special character" };
+  return { valid: true };
+}

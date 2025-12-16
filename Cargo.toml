@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 axum = { version = "0.7", features = ["ws", "multipart"] }
+axum-extra = { version = "0.9", features = ["cookie"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -19,5 +20,10 @@ futures = "0.3"
 chrono = "0.4"
 rust-embed = "8.9.0"
 mime_guess = "2.0.5"
+argon2 = "0.5"
+rand = "0.8"
+time = "0.3"
+subtle = "2.6.1"
+dotenv = "0.15"
 
 

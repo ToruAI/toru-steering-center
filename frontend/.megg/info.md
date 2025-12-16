@@ -1,6 +1,6 @@
 ---
 created: 2025-12-15T09:25:00.584Z
-updated: 2025-12-15T10:20:12.946Z
+updated: 2025-12-16T12:03:02.361Z
 type: context
 ---
 # Frontend Context
@@ -64,4 +64,25 @@ import type { QuickAction } from '../lib/api';
 Not:
 ```typescript
 import { api, QuickAction } from '../lib/api'; // Error!
+```
+
+
+## 2025-12-16T12:03:02.362Z
+## Key Implementation Notes
+
+### Routing
+- `/` - Dashboard (system stats + quick actions)
+- `/system-monitor` - Detailed system monitoring with charts
+- `/scripts` - Script execution with terminal output (Admin Only)
+- `/history` - Task execution history
+- `/settings` - Scripts directory + quick action management (Admin Only)
+
+### Quick Actions Flow
+Dashboard -> click Quick Action -> **POST /api/quick-actions/:id/execute** -> navigates to `/history?highlight_task=<id>` (accessible to Clients)
+
+### Type Imports
+Project uses `verbatimModuleSyntax` in TypeScript. Always use:
+```typescript
+import { api } from '../lib/api';
+import type { QuickAction } from '../lib/api';
 ```

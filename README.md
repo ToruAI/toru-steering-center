@@ -40,24 +40,34 @@ This is a foundation. Out of the box you get system monitoring and script execut
 ## Quick Start
 
 ```bash
-# One command to build and run
-./build-and-run.sh
-```
+# Frontend
+cd frontend && npm install && npm run build
 
-Or manually:
-
-```bash
-cd frontend && npm install && npm run build && cd ..
+# Backend (release)
+export ADMIN_PASSWORD="your-secure-password"
 cargo build --release
 ./target/release/steering-center
+
+# Development
+# Terminal 1: cd frontend && npm run dev
+# Terminal 2: export ADMIN_PASSWORD="dev" && cargo run
 ```
 
 Open `http://localhost:3000`
 
-**Custom port:**
-```bash
-./target/release/steering-center --port 8080
-```
+## Authentication
+
+**Toru Steering Center** uses a hybrid authentication system to ensure security without external dependencies.
+
+- **Admin (Owner)**: Authenticated via environment variables (`ADMIN_USERNAME` / `ADMIN_PASSWORD`). Has full access to settings, user management, and arbitrary script execution.
+- **Client (User)**: Authenticated via SQLite database. Managed by Admin via UI. Limited to viewing dashboards and running pre-approved "Quick Actions".
+
+### Credentials
+
+| Role | Username | Password | Storage |
+|------|----------|----------|---------|
+| **Admin** | `admin` (default) | Set via `ADMIN_PASSWORD` env var | Environment (Stateless) |
+| **Client** | Custom | Set by Admin | SQLite (Argon2 Hash) |
 
 ## Tech Stack
 
@@ -72,15 +82,7 @@ Open `http://localhost:3000`
 
 ## Deploy to VPS
 
-### Cloudflare Tunnel (Recommended)
-
-```bash
-# On your VPS
-./build-and-run.sh
-
-# Configure cloudflared to forward to localhost:3000
-# Add authentication via Cloudflare Zero Trust
-```
+Since authentication is built-in, you can deploy securely without a VPN, though a reverse proxy with SSL (Nginx/Caddy/Cloudflare) is **highly recommended** for production.
 
 ### Systemd Service
 
@@ -92,6 +94,10 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/path/to/steering-center
+# Set your secure admin password here
+Environment="ADMIN_PASSWORD=change_this_to_something_secure"
+# Optional: Enable secure cookies if behind HTTPS
+Environment="PRODUCTION=true"
 ExecStart=/path/to/steering-center/target/release/steering-center
 Restart=always
 
@@ -116,8 +122,11 @@ Options:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
+| `ADMIN_USERNAME` | `admin` | Admin username |
+| `ADMIN_PASSWORD` | **REQUIRED** | Admin password (must be set) |
 | `STEERING_HOST` | `127.0.0.1` | Bind address (`0.0.0.0` for external) |
 | `STEERING_PORT` | `3000` | Server port |
+| `PRODUCTION` | `false` | Set to `true` to enable Secure cookies |
 | `RUST_LOG` | `info` | Log level |
 
 CLI options take priority over environment variables.

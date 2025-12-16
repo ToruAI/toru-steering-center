@@ -9,8 +9,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { UserManagement } from '@/components/UserManagement';
+import { LoginHistory } from '@/components/LoginHistory';
+import { ChangePassword } from '@/components/ChangePassword';
+
+import { useAuth } from '@/contexts/AuthContext';
 
 export function Settings() {
+  const { isAdmin } = useAuth();
   const [_settings, setSettings] = useState<Setting[]>([]);
   const [quickActions, setQuickActions] = useState<QuickAction[]>([]);
   const [scriptsDir, setScriptsDir] = useState('');
@@ -23,6 +29,13 @@ export function Settings() {
 
   useEffect(() => {
     const fetchData = async () => {
+      // Always fetch scripts list if needed for actions, but actions are admin only
+      // Actually, all these endpoints are admin only.
+      if (!isAdmin) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const [settingsData, actions, scriptsList] = await Promise.all([
           api.getSettings(),
@@ -46,7 +59,7 @@ export function Settings() {
     };
 
     fetchData();
-  }, []);
+  }, [isAdmin]);
 
   const handleSaveScriptsDir = async () => {
     setSaving(true);
@@ -115,165 +128,179 @@ export function Settings() {
         </p>
       </div>
 
-      {/* Scripts Directory */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <FolderOpen className="h-5 w-5" />
-            <CardTitle>Scripts Directory</CardTitle>
-          </div>
-          <CardDescription>
-            Specify the directory where your executable scripts are stored
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="scripts-dir">Directory Path</Label>
-            <div className="flex gap-3">
-              <Input
-                id="scripts-dir"
-                type="text"
-                value={scriptsDir}
-                onChange={(e) => setScriptsDir(e.target.value)}
-                placeholder="./scripts"
-                className="flex-1"
-              />
-              <Button
-                onClick={handleSaveScriptsDir}
-                disabled={saving}
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save
-                  </>
-                )}
-              </Button>
+      {/* Scripts Directory - Admin Only */}
+      {isAdmin && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <FolderOpen className="h-5 w-5" />
+              <CardTitle>Scripts Directory</CardTitle>
             </div>
-          </div>
-          
-          {saveSuccess && (
-            <Alert className="bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-900">
-              <AlertDescription className="text-green-700 dark:text-green-400">
-                Settings saved successfully!
-              </AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
-            <CardTitle>Quick Actions</CardTitle>
-          </div>
-          <CardDescription>
-            Create shortcuts for frequently executed scripts
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Add New Quick Action */}
-          <div className="rounded-lg border bg-card p-4 space-y-4">
-            <h3 className="font-semibold text-sm">Add New Quick Action</h3>
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="action-name">Action Name</Label>
+            <CardDescription>
+              Specify the directory where your executable scripts are stored
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="scripts-dir">Directory Path</Label>
+              <div className="flex gap-3">
                 <Input
-                  id="action-name"
+                  id="scripts-dir"
                   type="text"
-                  value={newActionName}
-                  onChange={(e) => setNewActionName(e.target.value)}
-                  placeholder="e.g., Check Disk Usage"
+                  value={scriptsDir}
+                  onChange={(e) => setScriptsDir(e.target.value)}
+                  placeholder="./scripts"
+                  className="flex-1"
                 />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="action-script">Select Script</Label>
-                <Select 
-                  value={newActionScript} 
-                  onValueChange={setNewActionScript}
+                <Button
+                  onClick={handleSaveScriptsDir}
+                  disabled={saving}
                 >
-                  <SelectTrigger id="action-script">
-                    <SelectValue placeholder="Choose a script..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {scripts.map((script) => (
-                      <SelectItem key={script} value={script}>
-                        {script}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  {saving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save
+                    </>
+                  )}
+                </Button>
               </div>
-
-              <Button
-                onClick={handleAddQuickAction}
-                disabled={saving || !newActionName || !newActionScript}
-                className="w-full sm:w-auto"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Adding
-                  </>
-                ) : (
-                  <>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Quick Action
-                  </>
-                )}
-              </Button>
             </div>
-          </div>
-
-          <Separator />
-
-          {/* Quick Actions List */}
-          <div className="space-y-3">
-            <h3 className="font-semibold text-sm">Configured Actions</h3>
-            {quickActions.length === 0 ? (
-              <div className="rounded-lg border border-dashed p-8 text-center">
-                <Zap className="mx-auto h-8 w-8 text-muted-foreground opacity-50 mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  No quick actions configured yet.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {quickActions.map((action) => (
-                  <div
-                    key={action.id}
-                    className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent/50 transition-colors"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{action.name}</p>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {action.script_path}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteQuickAction(action.id)}
-                      className="ml-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Delete</span>
-                    </Button>
-                  </div>
-                ))}
-              </div>
+            
+            {saveSuccess && (
+              <Alert className="bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-900">
+                <AlertDescription className="text-green-700 dark:text-green-400">
+                  Settings saved successfully!
+                </AlertDescription>
+              </Alert>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* User Management */}
+      {isAdmin && <UserManagement />}
+
+      {/* Change Password */}
+      <ChangePassword />
+
+      {/* Security / Login History */}
+      {isAdmin && <LoginHistory />}
+
+      {/* Quick Actions - Admin Only */}
+      {isAdmin && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Zap className="h-5 w-5" />
+              <CardTitle>Quick Actions</CardTitle>
+            </div>
+            <CardDescription>
+              Create shortcuts for frequently executed scripts
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Add New Quick Action */}
+            <div className="rounded-lg border bg-card p-4 space-y-4">
+              <h3 className="font-semibold text-sm">Add New Quick Action</h3>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="action-name">Action Name</Label>
+                  <Input
+                    id="action-name"
+                    type="text"
+                    value={newActionName}
+                    onChange={(e) => setNewActionName(e.target.value)}
+                    placeholder="e.g., Check Disk Usage"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="action-script">Select Script</Label>
+                  <Select 
+                    value={newActionScript} 
+                    onValueChange={setNewActionScript}
+                  >
+                    <SelectTrigger id="action-script">
+                      <SelectValue placeholder="Choose a script..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {scripts.map((script) => (
+                        <SelectItem key={script} value={script}>
+                          {script}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button
+                  onClick={handleAddQuickAction}
+                  disabled={saving || !newActionName || !newActionScript}
+                  className="w-full sm:w-auto"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Adding
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Quick Action
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Quick Actions List */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm">Configured Actions</h3>
+              {quickActions.length === 0 ? (
+                <div className="rounded-lg border border-dashed p-8 text-center">
+                  <Zap className="mx-auto h-8 w-8 text-muted-foreground opacity-50 mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    No quick actions configured yet.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {quickActions.map((action) => (
+                    <div
+                      key={action.id}
+                      className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{action.name}</p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {action.script_path}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteQuickAction(action.id)}
+                        className="ml-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
+

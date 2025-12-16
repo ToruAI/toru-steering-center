@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import type { TaskHistory } from '../lib/api';
 import { 
-  History as HistoryIcon, 
+  History as HistoryIcon,
   RefreshCw, 
   CheckCircle2, 
   XCircle, 
@@ -22,12 +22,18 @@ export function History() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const highlightTask = searchParams.get('highlight_task');
 
   const fetchHistory = async () => {
     setLoading(true);
     try {
       const data = await api.getHistory();
       setHistory(data);
+      // Auto-expand highlighted task if present in list
+      if (highlightTask && data.some(t => t.id === highlightTask)) {
+        setExpandedId(highlightTask);
+      }
     } catch (err) {
       console.error('Failed to fetch history:', err);
     } finally {
@@ -37,7 +43,18 @@ export function History() {
 
   useEffect(() => {
     fetchHistory();
-  }, []);
+    // Set up polling for updates if looking at a specific task
+    let interval: number;
+    if (highlightTask) {
+        interval = setInterval(async () => {
+            const data = await api.getHistory();
+            setHistory(data);
+             // Verify it's still running or just to update output
+        }, 2000) as unknown as number;
+    }
+    return () => clearInterval(interval);
+  }, [highlightTask]); // Re-run when highlightTask changes
+
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);

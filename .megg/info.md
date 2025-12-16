@@ -13,7 +13,7 @@ Self-hosted dashboard template for monitoring system resources and executing scr
 - **Backend**: Rust (Axum) + SQLite - chosen for robustness and low resource usage (<100MB RAM)
 - **Frontend**: Vite + React + TypeScript + Tailwind CSS + shadcn/ui
 - **Communication**: REST API + WebSocket for real-time streaming
-- **Security**: Runs on localhost, Cloudflare handles external traffic routing
+- **Security**: Hybrid Auth (Env for Admin, DB for Clients) + Hardened (IP Rate Limit, Strict Cookies)
 
 ## Branding (from ToruAI)
 - **Primary**: #493FAA (deep violet)
@@ -29,12 +29,13 @@ Self-hosted dashboard template for monitoring system resources and executing scr
 cd frontend && npm install && npm run build
 
 # Backend (release)
+export ADMIN_PASSWORD="your-secure-password"
 cargo build --release
 ./target/release/steering-center
 
 # Development
 # Terminal 1: cd frontend && npm run dev
-# Terminal 2: cargo run
+# Terminal 2: export ADMIN_PASSWORD="dev" && cargo run
 ```
 
 Server runs on http://localhost:3000

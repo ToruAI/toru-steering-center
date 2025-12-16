@@ -40,9 +40,17 @@ export function Dashboard() {
     fetchQuickActions();
   }, []);
 
-  const handleRunQuickAction = (action: QuickAction) => {
-    // Navigate to scripts page with the script pre-selected
-    navigate(`/scripts?script=${encodeURIComponent(action.script_path)}`);
+  const handleRunQuickAction = async (action: QuickAction) => {
+    try {
+      setLoadingActions(true);
+      const result = await api.runQuickAction(action.id);
+      // Navigate to history page with specific task highlighted
+      navigate(`/history?highlight_task=${result.task_id}`);
+    } catch (err) {
+      console.error('Failed to run action:', err);
+      // Maybe show toast error here?
+      setLoadingActions(false);
+    }
   };
 
   if (error) {

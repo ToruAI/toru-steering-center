@@ -17,7 +17,7 @@ use tokio::sync::Mutex;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
 use crate::db::init_db;
-use crate::routes::{create_api_router, handle_websocket};
+use crate::routes::{create_api_router, create_auth_router, handle_websocket};
 use crate::routes::api::AppState;
 
 #[derive(RustEmbed)]
@@ -26,6 +26,9 @@ struct Assets;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Load environment variables from .env file
+    dotenv::dotenv().ok();
+
     // Parse CLI arguments
     let args: Vec<String> = env::args().collect();
     let (cli_port, cli_host) = parse_args(&args);
@@ -44,22 +47,63 @@ async fn main() -> anyhow::Result<()> {
         )
         .init();
     
+    // Check for Secure Cookie capability
+    let is_prod = env::var("PRODUCTION").map(|v| v.to_lowercase() == "true" || v == "1").unwrap_or(false);
+    let force_secure = env::var("SECURE_COOKIES").map(|v| v.to_lowercase() == "true" || v == "1").unwrap_or(false);
+    
+    if !is_prod && !force_secure {
+        tracing::warn!("Running without PRODUCTION/SECURE_COOKIES=true - Cookies will NOT be marked Secure (OK for localhost)");
+    } else {
+        tracing::info!("Secure cookies ENABLED");
+    }
+    
     // Initialize database
     let db = init_db()?;
     tracing::info!("Database initialized");
+    
+    // Clean up expired sessions and old login attempts on startup
+    if let Err(e) = crate::db::cleanup_expired_sessions(&db).await {
+        tracing::warn!("Failed to cleanup expired sessions: {}", e);
+    }
+    if let Err(e) = crate::db::cleanup_old_login_attempts(&db).await {
+        tracing::warn!("Failed to cleanup old login attempts: {}", e);
+    }
+    tracing::info!("Session cleanup completed");
     
     // Initialize system monitor
     let sys = Arc::new(Mutex::new(System::new_all()));
     
     // Create app state
-    let state = AppState { db, sys };
+    let state = AppState { db: db.clone(), sys };
+    
+    // Spawn background task to clean up expired sessions daily
+    let db_cleanup = db.clone();
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(24 * 60 * 60)); // 24 hours
+        loop {
+            interval.tick().await; // Wait for next tick
+            
+            // Skip first tick if we want (interval.tick() completes immediately first time in some versions, 
+            // but since we just ran cleanup in main, effectively we wait 24h)
+            
+            tracing::info!("Running daily session cleanup");
+            if let Err(e) = crate::db::cleanup_expired_sessions(&db_cleanup).await {
+                tracing::warn!("Failed to cleanup expired sessions: {}", e);
+            }
+            if let Err(e) = crate::db::cleanup_old_login_attempts(&db_cleanup).await {
+                tracing::warn!("Failed to cleanup old login attempts: {}", e);
+            }
+        }
+    });
     
     // Create API router
     let api_router = create_api_router();
+    let auth_router = create_auth_router();
     
     // Create main router
     let app = Router::new()
         .route("/api/ws", get(handle_websocket))
+        .nest("/api/auth", auth_router)
         .nest("/api", api_router)
         .fallback(static_handler)
         .layer(TraceLayer::new_for_http())
