@@ -54,10 +54,45 @@ Toru Steering Center is a self-hosted, lightweight VPS control panel designed fo
 - **WebSocket Protocol:** Messages follow `{type, data}` format (run, cancel, started, stdout, stderr, exit, cancelled, error)
 - **API Design:** RESTful endpoints under `/api/`
 
-### Testing Strategy
-- Manual testing currently (no automated test suite)
-- Backend services are testable (clear dependency boundaries)
-- Future: Consider Vitest for frontend, Rust test modules for backend
+### Quality Strategy
+
+**Philosophy:** 80% of TDD benefits with 20% of the effort. Let the compiler catch what it can, test critical paths only.
+
+**Quality Gates (every change):**
+1. `cargo fmt --check` - Code formatting
+2. `cargo clippy -- -D warnings` - Linting with warnings as errors
+3. `cargo test` - Run test suite
+4. Code review for security-sensitive code
+
+**What to Test (Critical Paths):**
+- Security: Authentication, authorization, license validation
+- Data integrity: Database operations, state persistence
+- Integration points: Plugin loading, API contracts
+- Error handling: Graceful failures, no panics
+
+**What to Skip:**
+- UI layout and styling
+- Simple CRUD operations
+- Trivial getters/setters
+- 100% coverage (diminishing returns)
+
+**Testing Approach:**
+- **Integration tests > Unit tests** - Test real flows, not mocked internals
+- **Rust type system** - Use newtypes to make invalid states unrepresentable
+- **Property-based tests** - For complex validation logic (optional)
+
+**Per-Task Workflow:**
+```
+1. IMPLEMENT - Write the code
+2. COMPILE - Let Rust catch type errors
+3. TEST (if critical) - Write integration test
+4. CLIPPY - cargo clippy
+5. REVIEW (if significant) - AI code review
+```
+
+**Tools:**
+- Backend: `cargo test`, `cargo clippy`, `cargo fmt`
+- Frontend: Vitest (when needed), ESLint, Prettier
 
 ### Git Workflow
 - Main branch: `main`
