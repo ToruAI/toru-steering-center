@@ -1,5 +1,7 @@
 # Tasks: Add Process-Isolated Plugin System
 
+**Progress:** 41/172 tasks completed
+
 ## Phase 1: Plugin Protocol & Rust SDK
 
 **Status:** ✅ Completed (2025-12-30)
@@ -25,30 +27,33 @@
 
 ## Phase 2: Plugin Supervisor
 
+**Status:** 🔄 Phase 2.1 Complete (2025-12-30)
+
 ### 2.1 Process Management
-- [ ] 2.1.1 Add `tokio` process management dependencies to main Cargo.toml
-- [ ] 2.1.2 Create `src/services/plugins.rs` with PluginSupervisor struct
-- [ ] 2.1.3 Create `PluginProcess` struct (id, process, socket, enabled)
-- [ ] 2.1.4 Implement `scan_plugins_directory()` to find .binary files
-- [ ] 2.1.5 Implement `read_plugin_metadata()` (call --metadata flag)
-- [ ] 2.1.6 Implement `spawn_plugin()` to start plugin process
-- [ ] 2.1.7 Implement `kill_plugin()` to stop plugin process
-- [ ] 2.1.8 Implement `check_plugin_health()` (socket status)
-- [ ] 2.1.9 Handle plugin load errors gracefully (log and skip)
+- [x] 2.1.1 Add `tokio` process management dependencies to main Cargo.toml
+- [x] 2.1.2 Create `src/services/plugins.rs` with PluginSupervisor struct
+- [x] 2.1.3 Create `PluginProcess` struct (id, process, socket, enabled)
+- [x] 2.1.4 Implement `scan_plugins_directory()` to find .binary files
+- [x] 2.1.5 Implement `read_plugin_metadata()` (call --metadata flag)
+- [x] 2.1.6 Implement `spawn_plugin()` to start plugin process
+- [x] 2.1.7 Implement `kill_plugin()` to stop plugin process
+- [x] 2.1.8 Implement `check_plugin_health()` (socket status)
+- [x] 2.1.9 Handle plugin load errors gracefully (log and skip)
 
 ### 2.2 Plugin Lifecycle
-- [ ] 2.2.1 Create `./plugins/.metadata/config.json` for state storage
-- [ ] 2.2.2 Implement `enable_plugin()` in PluginSupervisor (spawn process)
-- [ ] 2.2.3 Implement `disable_plugin()` in PluginSupervisor (kill process)
-- [ ] 2.2.4 Implement `get_plugin_status()` in PluginSupervisor
-- [ ] 2.2.5 Load enabled state on startup
-- [ ] 2.2.6 Send init message to spawned plugins
-- [ ] 2.2.7 Send shutdown message before killing plugin
+**Status:** ✅ Complete (2025-12-30)
+- [x] 2.2.1 Create `./plugins/.metadata/config.json` for state storage
+- [x] 2.2.2 Implement `enable_plugin()` in PluginSupervisor (spawn process)
+- [x] 2.2.3 Implement `disable_plugin()` in PluginSupervisor (kill process)
+- [x] 2.2.4 Implement `get_plugin_status()` in PluginSupervisor
+- [x] 2.2.5 Load enabled state on startup
+- [x] 2.2.6 Send init message to spawned plugins
+- [x] 2.2.7 Send shutdown message before killing plugin
 
 ### 2.3 Crash Recovery
-- [ ] 2.3.1 Implement restart counter for each plugin
-- [ ] 2.3.2 Implement exponential backoff (1s, 2s, 4s, 8s, 16s)
-- [ ] 2.3.3 Implement disable after N consecutive failures (configurable, default 10)
+- [x] 2.3.1 Implement restart counter for each plugin
+- [x] 2.3.2 Implement exponential backoff (1s, 2s, 4s, 8s, 16s)
+- [x] 2.3.3 Implement disable after N consecutive failures (configurable, default 10)
 - [ ] 2.3.4 Write crash events to plugin_events table
 - [ ] 2.3.5 Implement notification hooks (logs + DB entry)
 

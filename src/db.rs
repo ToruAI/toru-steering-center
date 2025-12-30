@@ -215,7 +215,7 @@ pub fn init_db() -> Result<DbPool> {
 pub async fn get_setting(pool: &DbPool, key: &str) -> Result<Option<String>> {
     let conn = pool.lock().await;
     let mut stmt = conn.prepare("SELECT value FROM settings WHERE key = ?1")?;
-    let value: Option<String> = stmt.query_row(params![key], |row| Ok(row.get(0)?)).ok();
+    let value: Option<String> = stmt.query_row(params![key], |row| row.get(0)).ok();
     Ok(value)
 }
 
