@@ -1,6 +1,6 @@
 ---
 created: 2025-12-15T09:58:30.000Z
-updated: 2025-12-29T22:33:09.223Z
+updated: 2025-12-30T13:28:48.116Z
 type: memory
 ---
 # Architectural Decisions
@@ -134,7 +134,9 @@ Detailed security review revealed vulnerabilities (Timing attack, Rate limit byp
 - **Complexity**: Added `subtle` dependency and stricter policies.
 
 ## 2025-12-29T22:21:15.538Z
-## Plugin System Architecture Decision (2025-12-29)
+## Plugin System Architecture Decision (2025-12-29) - SUPRESEDED
+
+**⚠️ NOTE:** This decision was superseded on 2025-12-30 by process-isolated plugins. See below.
 
 ### Context
 Initially designed a WASM-based plugin system with:
@@ -159,7 +161,7 @@ The WASM design was **over-engineered** for the actual business model:
 2. Community plugins = users choose to trust them (like npm, WordPress)
 3. It's their VPS, their responsibility
 
-### Decision: Dynamic Libraries (.so files)
+### Decision: Dynamic Libraries (.so files) - SUPRESEDED
 
 **Chosen approach:**
 - `libloading` crate for loading .so files from `./plugins/`
@@ -177,6 +179,11 @@ The WASM design was **over-engineered** for the actual business model:
 - Sandboxing (not needed - trust model)
 - Capability security (not needed - trusted code)
 - Cross-platform (Linux only - our target)
+
+**❌ Why this was superseded:**
+- No crash isolation - one bad plugin crashes the entire core
+- ABI compatibility issues - trait changes break all plugins
+- Language locked to Rust only
 
 ### Licensing Model
 ```
@@ -273,3 +280,53 @@ Use Rust's type system: newtypes, enums, Result types. Make invalid states unrep
 
 ### Reference
 See `openspec/project.md` Quality Strategy section for full details.
+
+## 2025-12-30T13:28:48.116Z
+## Decision: Process-Isolated Plugin System
+
+**Date:** 2025-12-30
+**Change:** `add-dynamic-plugin-system`
+
+**Decision:** Use process-isolated plugins with Unix domain socket communication instead of dynamic libraries (.so).
+
+**Why this architecture:**
+- **Stability is critical** - One bad plugin shouldn't crash the core
+- **Your deployment model** - You maintain all VPS instances, need observability
+- **Language flexibility** - Proprietary plugins in Rust, community can use Rust or Python
+- **True ownership** - Instance-locked licensing works without license server
+- **TORIS integration** - Structured logs for observability
+
+**Architecture:**
+```
+[Core Process]
+    ├─ spawns → [Plugin Process 1] ← Unix socket
+    ├─ spawns → [Plugin Process 2] ← Unix socket
+    └─ monitors → Health, logs, restart on crash
+```
+
+**Key trade-offs:**
+- **Gain:** Crash isolation, auto-restart, no ABI issues, any language support
+- **Cost:** ~300-400 lines supervision code, microsecond socket overhead
+
+**Protocol:** JSON messages over Unix domain sockets
+- Lifecycle: init, shutdown
+- HTTP: method, path, headers, body
+- KV: get, set, delete
+
+**Licensing:** HMAC-signed keys tied to instance ID (offline, works forever, instance-specific)
+
+**Observability:** Structured JSON logs to `/var/log/toru/plugins/<id>.log` for TORIS
+
+**Examples:** Rust SDK (`toru-plugin-api`) + Python example for community
+
+**Alternatives considered and rejected:**
+- Dynamic libraries (.so) - No crash isolation, ABI issues
+- WASM - Over-engineered for trusted code
+- HTTP/Webhooks - Too much overhead (milliseconds vs microseconds)
+
+**Non-goals (MVP):**
+- No plugin marketplace
+- Linux only
+- No sandboxing (trust model)
+- No hot-reload without restart
+- No resource limiting (cgroups) - future enhancement

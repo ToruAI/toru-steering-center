@@ -1,115 +1,184 @@
-# Tasks: Add Dynamic Library Plugin System
+# Tasks: Add Process-Isolated Plugin System
 
-## Phase 1: Plugin API Crate
+## Phase 1: Plugin Protocol & Rust SDK
 
 ### 1.1 Create toru-plugin-api crate
-- [ ] 1.1.1 Create `toru-plugin-api/Cargo.toml` with minimal dependencies
-- [ ] 1.1.2 Define `ToruPlugin` trait with metadata, init, register_routes, frontend_bundle
+- [ ] 1.1.1 Create `toru-plugin-api/Cargo.toml` with minimal dependencies (serde, tokio, async-trait)
+- [ ] 1.1.2 Define `ToruPlugin` trait with metadata, init, handle_http, handle_kv
 - [ ] 1.1.3 Define `PluginMetadata` struct (id, name, version, author, icon, route)
 - [ ] 1.1.4 Define `PluginContext` struct (instance_id, config, kv)
-- [ ] 1.1.5 Define `PluginRoute` struct for registering HTTP handlers
-- [ ] 1.1.6 Define `PluginKvStore` trait for key-value storage
+- [ ] 1.1.5 Define `HttpRequest` and `HttpResponse` structs
+- [ ] 1.1.6 Define `KvOp` enum (Get, Set, Delete)
 - [ ] 1.1.7 Define `PluginError` enum for error handling
-- [ ] 1.1.8 Add documentation and examples in README
+- [ ] 1.1.8 Define message types (Lifecycle, Http, Kv)
+- [ ] 1.1.9 Implement message serialization/deserialization (JSON)
+- [ ] 1.1.10 Add documentation and examples in README
 
-## Phase 2: Core Plugin Loader
+### 1.2 Plugin Protocol
+- [ ] 1.2.1 Define JSON message format (type, timestamp, request_id, payload)
+- [ ] 1.2.2 Implement message reader (read from Unix socket, deserialize JSON)
+- [ ] 1.2.3 Implement message writer (serialize JSON, write to Unix socket)
+- [ ] 1.2.4 Document message types and payload structures
+- [ ] 1.2.5 Create protocol examples (init, http request, kv get/set)
 
-### 2.1 Plugin Loading
-- [ ] 2.1.1 Add `libloading` dependency to main Cargo.toml
-- [ ] 2.1.2 Create `src/services/plugins.rs` with PluginManager struct
-- [ ] 2.1.3 Implement `scan_plugins_directory()` to find .so files
-- [ ] 2.1.4 Implement `load_plugin()` using libloading
-- [ ] 2.1.5 Implement `create_plugin()` symbol lookup and call
-- [ ] 2.1.6 Handle plugin load errors gracefully (log and skip)
-- [ ] 2.1.7 Store loaded plugins in PluginManager
+## Phase 2: Plugin Supervisor
 
-### 2.2 Instance Identity
-- [ ] 2.2.1 Add `get_or_create_instance_id()` function in db.rs
-- [ ] 2.2.2 Generate UUID v4 on first run
-- [ ] 2.2.3 Store instance_id in settings table
-- [ ] 2.2.4 Pass instance_id to plugins via PluginContext
+### 2.1 Process Management
+- [ ] 2.1.1 Add `tokio` process management dependencies to main Cargo.toml
+- [ ] 2.1.2 Create `src/services/plugins.rs` with PluginSupervisor struct
+- [ ] 2.1.3 Create `PluginProcess` struct (id, process, socket, enabled)
+- [ ] 2.1.4 Implement `scan_plugins_directory()` to find .binary files
+- [ ] 2.1.5 Implement `read_plugin_metadata()` (call --metadata flag)
+- [ ] 2.1.6 Implement `spawn_plugin()` to start plugin process
+- [ ] 2.1.7 Implement `kill_plugin()` to stop plugin process
+- [ ] 2.1.8 Implement `check_plugin_health()` (socket status)
+- [ ] 2.1.9 Handle plugin load errors gracefully (log and skip)
 
-### 2.3 Plugin Key-Value Storage
-- [ ] 2.3.1 Add `plugin_kv` table to database schema
-- [ ] 2.3.2 Implement `plugin_kv_get(plugin_id, key)` in db.rs
-- [ ] 2.3.3 Implement `plugin_kv_set(plugin_id, key, value)` in db.rs
-- [ ] 2.3.4 Implement `plugin_kv_delete(plugin_id, key)` in db.rs
-- [ ] 2.3.5 Create SqliteKvStore implementing PluginKvStore trait
+### 2.2 Plugin Lifecycle
+- [ ] 2.2.1 Create `./plugins/.metadata/config.json` for state storage
+- [ ] 2.2.2 Implement `enable_plugin()` in PluginSupervisor (spawn process)
+- [ ] 2.2.3 Implement `disable_plugin()` in PluginSupervisor (kill process)
+- [ ] 2.2.4 Implement `get_plugin_status()` in PluginSupervisor
+- [ ] 2.2.5 Load enabled state on startup
+- [ ] 2.2.6 Send init message to spawned plugins
+- [ ] 2.2.7 Send shutdown message before killing plugin
 
-### 2.4 Plugin Lifecycle
-- [ ] 2.4.1 Create `./plugins/.metadata/config.json` for state storage
-- [ ] 2.4.2 Implement `enable_plugin()` in PluginManager
-- [ ] 2.4.3 Implement `disable_plugin()` in PluginManager
-- [ ] 2.4.4 Implement `get_plugin_status()` in PluginManager
-- [ ] 2.4.5 Load enabled state on startup
-- [ ] 2.4.6 Call `init()` only for enabled plugins
+### 2.3 Crash Recovery
+- [ ] 2.3.1 Implement restart counter for each plugin
+- [ ] 2.3.2 Implement exponential backoff (1s, 2s, 4s, 8s, 16s)
+- [ ] 2.3.3 Implement disable after N consecutive failures (configurable, default 10)
+- [ ] 2.3.4 Write crash events to plugin_events table
+- [ ] 2.3.5 Implement notification hooks (logs + DB entry)
 
-## Phase 3: Plugin API Routes
+## Phase 3: Instance Identity
 
-### 3.1 Backend Routes
-- [ ] 3.1.1 Create `src/routes/plugins.rs`
-- [ ] 3.1.2 Implement `GET /api/plugins` - list all plugins
-- [ ] 3.1.3 Implement `GET /api/plugins/:id` - get plugin details
-- [ ] 3.1.4 Implement `POST /api/plugins/:id/enable` - enable plugin
-- [ ] 3.1.5 Implement `POST /api/plugins/:id/disable` - disable plugin
-- [ ] 3.1.6 Implement `GET /api/plugins/:id/bundle.js` - serve frontend
-- [ ] 3.1.7 Register dynamic plugin routes from enabled plugins
-- [ ] 3.1.8 Add auth middleware (require login for all plugin routes)
+### 3.1 Instance ID
+- [ ] 3.1.1 Add `get_or_create_instance_id()` function in db.rs
+- [ ] 3.1.2 Generate UUID v4 on first run
+- [ ] 3.1.3 Store instance_id in settings table
+- [ ] 3.1.4 Pass instance_id to plugins via init message
 
-### 3.2 Integration
-- [ ] 3.2.1 Initialize PluginManager in main.rs
-- [ ] 3.2.2 Add PluginManager to AppState
-- [ ] 3.2.3 Mount plugin routes in router
+## Phase 4: Plugin Key-Value Storage
 
-## Phase 4: Frontend - Plugin Manager
+### 4.1 Database Schema
+- [ ] 4.1.1 Add `plugin_kv` table to database schema
+- [ ] 4.1.2 Add `plugin_events` table to database schema
+- [ ] 4.1.3 Create migration script
 
-### 4.1 Plugin List Page
-- [ ] 4.1.1 Create `frontend/src/pages/Plugins.tsx`
-- [ ] 4.1.2 Add API client functions in `lib/api.ts`
-- [ ] 4.1.3 Display plugin cards (name, version, status, icon)
-- [ ] 4.1.4 Implement enable/disable toggle
-- [ ] 4.1.5 Show plugin details on click
-- [ ] 4.1.6 Add route to App.tsx
-- [ ] 4.1.7 Add "Plugins" entry to sidebar
+### 4.2 KV Operations
+- [ ] 4.2.1 Implement `plugin_kv_get(plugin_id, key)` in db.rs
+- [ ] 4.2.2 Implement `plugin_kv_set(plugin_id, key, value)` in db.rs
+- [ ] 4.2.3 Implement `plugin_kv_delete(plugin_id, key)` in db.rs
+- [ ] 4.2.4 Implement `plugin_event_log(plugin_id, event_type, details)` in db.rs
+- [ ] 4.2.5 Create SqliteKvStore implementing PluginKvStore trait
+- [ ] 4.2.6 Expose KV endpoints to plugins via supervisor
 
-### 4.2 Plugin View Container
-- [ ] 4.2.1 Create `frontend/src/pages/PluginView.tsx`
-- [ ] 4.2.2 Load plugin bundle.js dynamically
-- [ ] 4.2.3 Call `mount(container, api)` after load
-- [ ] 4.2.4 Call `unmount(container)` on navigation away
-- [ ] 4.2.5 Provide API object with fetch, navigate, showToast
-- [ ] 4.2.6 Add dynamic routes for enabled plugins
+## Phase 5: Plugin API Routes
 
-### 4.3 Sidebar Integration
-- [ ] 4.3.1 Fetch enabled plugins on app load
-- [ ] 4.3.2 Add plugin entries to sidebar below system items
-- [ ] 4.3.3 Use plugin icon and name from metadata
-- [ ] 4.3.4 Hide plugins section when no plugins enabled
+### 5.1 Backend Routes
+- [ ] 5.1.1 Create `src/routes/plugins.rs`
+- [ ] 5.1.2 Implement `GET /api/plugins` - list all plugins
+- [ ] 5.1.3 Implement `GET /api/plugins/:id` - get plugin details
+- [ ] 5.1.4 Implement `POST /api/plugins/:id/enable` - enable plugin
+- [ ] 5.1.5 Implement `POST /api/plugins/:id/disable` - disable plugin
+- [ ] 5.1.6 Implement `GET /api/plugins/:id/bundle.js` - serve frontend
+- [ ] 5.1.7 Implement `GET /api/plugins/:id/logs` - get plugin logs
+- [ ] 5.1.8 Register dynamic plugin routes from enabled plugins
+- [ ] 5.1.9 Add auth middleware (require login for all plugin routes)
 
-## Phase 5: Example Plugin
+### 5.2 Integration
+- [ ] 5.2.1 Initialize PluginSupervisor in main.rs
+- [ ] 5.2.2 Add PluginSupervisor to AppState
+- [ ] 5.2.3 Mount plugin routes in router
+- [ ] 5.2.4 Start plugin supervision on startup
 
-### 5.1 Hello World Plugin
-- [ ] 5.1.1 Create `examples/hello-plugin/` directory
-- [ ] 5.1.2 Create Cargo.toml with toru-plugin-api dependency
-- [ ] 5.1.3 Implement ToruPlugin trait
-- [ ] 5.1.4 Create simple frontend (vanilla JS)
-- [ ] 5.1.5 Embed frontend with include_bytes!
-- [ ] 5.1.6 Add build script (build.sh)
-- [ ] 5.1.7 Test installation and loading
+## Phase 6: Frontend - Plugin Manager
 
-### 5.2 Documentation
-- [ ] 5.2.1 Write plugin development guide (toru-plugin-api/README.md)
-- [ ] 5.2.2 Document plugin structure and build process
-- [ ] 5.2.3 Document frontend mount API
-- [ ] 5.2.4 Document licensing (for proprietary plugins)
+### 6.1 Plugin List Page
+- [ ] 6.1.1 Create `frontend/src/pages/Plugins.tsx`
+- [ ] 6.1.2 Add API client functions in `lib/api.ts`
+- [ ] 6.1.3 Display plugin cards (name, version, status, icon, health)
+- [ ] 6.1.4 Implement enable/disable toggle
+- [ ] 6.1.5 Show plugin details on click
+- [ ] 6.1.6 Show plugin logs in modal/sidebar
+- [ ] 6.1.7 Add route to App.tsx
+- [ ] 6.1.8 Add "Plugins" entry to sidebar
 
-## Phase 6: Licensing (Optional - for Proprietary Plugins)
+### 6.2 Plugin View Container
+- [ ] 6.2.1 Create `frontend/src/pages/PluginView.tsx`
+- [ ] 6.2.2 Load plugin bundle.js dynamically
+- [ ] 6.2.3 Call `mount(container, api)` after load
+- [ ] 6.2.4 Call `unmount(container)` on navigation away
+- [ ] 6.2.5 Provide API object with fetch, navigate, showToast
+- [ ] 6.2.6 Add dynamic routes for enabled plugins
 
-### 6.1 License Validation
-- [ ] 6.1.1 Create license-generator CLI tool (internal, not shipped)
-- [ ] 6.1.2 Implement HMAC-SHA256 signing
-- [ ] 6.1.3 Document license key format
-- [ ] 6.1.4 Add license validation example to documentation
+### 6.3 Sidebar Integration
+- [ ] 6.3.1 Fetch enabled plugins on app load
+- [ ] 6.3.2 Add plugin entries to sidebar below system items
+- [ ] 6.3.3 Use plugin icon and name from metadata
+- [ ] 6.3.4 Hide plugins section when no plugins enabled
+- [ ] 6.3.5 Show health indicator (green/red dot) for each plugin
+
+## Phase 7: Logging & Observability
+
+### 7.1 Structured Logging
+- [ ] 7.1.1 Create `/var/log/toru/plugins/` directory on startup
+- [ ] 7.1.2 Implement plugin log writer (append to file)
+- [ ] 7.1.3 Log format: JSON (timestamp, level, plugin, message, optional error)
+- [ ] 7.1.4 Write plugin supervisor logs to `/var/log/toru/plugin-supervisor.log`
+- [ ] 7.1.5 Rotate logs (size-based or time-based)
+
+### 7.2 Log API
+- [ ] 7.2.1 Implement `GET /api/plugins/:id/logs` endpoint
+- [ ] 7.2.2 Support pagination and filtering
+- [ ] 7.2.3 Return logs in JSON format
+
+## Phase 8: Example Plugins
+
+### 8.1 Rust Plugin Example
+- [ ] 8.1.1 Create `examples/hello-plugin-rust/` directory
+- [ ] 8.1.2 Create Cargo.toml with toru-plugin-api dependency
+- [ ] 8.1.3 Implement ToruPlugin trait
+- [ ] 8.1.4 Create simple frontend (Vite + React)
+- [ ] 8.1.5 Embed frontend with include_bytes!
+- [ ] 8.1.6 Add --metadata flag support
+- [ ] 8.1.7 Add build script (build.sh)
+- [ ] 8.1.8 Test installation and loading
+
+### 8.2 Python Plugin Example
+- [ ] 8.2.1 Create `examples/hello-plugin-python/` directory
+- [ ] 8.2.2 Implement Unix socket server
+- [ ] 8.2.3 Implement message protocol (JSON)
+- [ ] 8.2.4 Implement simple HTTP handler
+- [ ] 8.2.5 Create simple frontend (vanilla JS)
+- [ ] 8.2.6 Add --metadata flag support
+- [ ] 8.2.7 Add build script (build.sh)
+- [ ] 8.2.8 Test installation and loading
+
+## Phase 9: Licensing (Optional - for Proprietary Plugins)
+
+### 9.1 License Validation
+- [ ] 9.1.1 Create license-generator CLI tool (internal, not shipped)
+- [ ] 9.1.2 Implement HMAC-SHA256 signing
+- [ ] 9.1.3 Document license key format
+- [ ] 9.1.4 Add license validation example to Rust plugin
+- [ ] 9.1.5 Add license validation example to Python plugin
+
+## Phase 10: Documentation
+
+### 10.1 Plugin Development Guide
+- [ ] 10.1.1 Write toru-plugin-api README (Rust)
+- [ ] 10.1.2 Write Python plugin guide
+- [ ] 10.1.3 Document plugin structure and build process
+- [ ] 10.1.4 Document frontend mount API
+- [ ] 10.1.5 Document licensing (for proprietary plugins)
+- [ ] 10.1.6 Document plugin lifecycle and supervision
+
+### 10.2 Architecture Documentation
+- [ ] 10.2.1 Document protocol specification
+- [ ] 10.2.2 Document plugin manager internals
+- [ ] 10.2.3 Document logging format and TORIS integration
+- [ ] 10.2.4 Add diagrams (architecture, message flow)
 
 ## Quality Gates
 
@@ -123,59 +192,84 @@ After completing each phase, verify:
 ### Critical Path Tests (Required)
 
 #### Plugin Loading (Phase 2)
-- [ ] T1: Valid .so loads successfully
-- [ ] T2: Invalid .so handled gracefully (no crash, logs error)
+- [ ] T1: Valid .binary spawns successfully
+- [ ] T2: Invalid .binary handled gracefully (no crash, logs error)
 - [ ] T3: Missing plugins directory created automatically
-- [ ] T4: Plugin with missing symbols skipped with error
+- [ ] T4: Plugin with --metadata failure handled gracefully
 
-#### Instance Identity (Phase 2)
+#### Instance Identity (Phase 3)
 - [ ] T5: Instance ID generated on first run
 - [ ] T6: Instance ID persists across restarts (same value)
 - [ ] T7: Instance ID is valid UUID format
+- [ ] T8: Instance ID passed to plugin in init message
 
-#### Plugin KV Storage (Phase 2)
-- [ ] T8: KV set/get works for plugin
-- [ ] T9: KV isolation (plugin A can't read plugin B's data)
-- [ ] T10: KV persists across restarts
+#### Plugin KV Storage (Phase 4)
+- [ ] T9: KV set/get works for plugin
+- [ ] T10: KV isolation (plugin A can't read plugin B's data)
+- [ ] T11: KV persists across restarts
 
-#### Plugin Lifecycle (Phase 2-3)
-- [ ] T11: Enable plugin makes routes available
-- [ ] T12: Disable plugin returns 404 on routes
-- [ ] T13: Enabled state persists across restarts
+#### Plugin Lifecycle (Phase 2-5)
+- [ ] T12: Enable plugin spawns process and makes routes available
+- [ ] T13: Disable plugin kills process and returns 404 on routes
+- [ ] T14: Enabled state persists across restarts
+- [ ] T15: Plugin crash triggers restart with backoff
 
-#### License Validation (Phase 6)
-- [ ] T14: Valid license key accepted
-- [ ] T15: Invalid signature rejected
-- [ ] T16: Wrong instance ID rejected
-- [ ] T17: Expired key rejected (if expiry set)
+#### Plugin Communication (Phase 5)
+- [ ] T16: HTTP requests forwarded to plugin correctly
+- [ ] T17: Plugin responses returned to client
+- [ ] T18: KV requests handled correctly
+- [ ] T19: Invalid plugin socket handled gracefully
+
+#### Observability (Phase 7)
+- [ ] T20: Plugin logs written to correct file
+- [ ] T21: Logs are valid JSON
+- [ ] T22: Logs API returns correct logs
+- [ ] T23: Plugin events written to database
+
+#### License Validation (Phase 9)
+- [ ] T24: Valid license key accepted
+- [ ] T25: Invalid signature rejected
+- [ ] T26: Wrong instance ID rejected
+- [ ] T27: Expired key rejected (if expiry set)
 
 ### Code Review Checkpoints
 Request AI code review after:
-- [ ] R1: Plugin loading implementation (security: loading untrusted .so)
+- [ ] R1: Plugin supervision implementation (security: process spawning)
 - [ ] R2: License validation (security: HMAC verification)
 - [ ] R3: Plugin routes (security: auth middleware)
+- [ ] R4: Socket communication (security: input validation)
 
 ## Validation (Manual Smoke Tests)
 
-- [ ] V.1 Build and load example plugin
-- [ ] V.2 Enable/disable plugin via UI
-- [ ] V.3 Plugin view renders and responds to clicks
-- [ ] V.4 Plugin KV storage works
-- [ ] V.5 Plugin appears in sidebar when enabled
-- [ ] V.6 Plugin hidden from sidebar when disabled
-- [ ] V.7 Server starts with no plugins (empty directory)
-- [ ] V.8 Server handles invalid .so files gracefully
+- [ ] V.1 Build and load Rust example plugin
+- [ ] V.2 Build and load Python example plugin
+- [ ] V.3 Enable/disable plugin via UI
+- [ ] V.4 Plugin view renders and responds to clicks
+- [ ] V.5 Plugin KV storage works
+- [ ] V.6 Plugin appears in sidebar when enabled
+- [ ] V.7 Plugin hidden from sidebar when disabled
+- [ ] V.8 Server starts with no plugins (empty directory)
+- [ ] V.9 Server handles invalid .binary files gracefully
+- [ ] V.10 Plugin crash triggers auto-restart
+- [ ] V.11 Plugin logs visible in UI
+- [ ] V.12 TORIS can read plugin logs
+- [ ] V.13 Plugin license validation works (proprietary)
 
 ## Dependencies
 
-- Phase 2 depends on Phase 1 (need API crate first)
-- Phase 3 depends on Phase 2 (need plugin loader)
-- Phase 4 depends on Phase 3 (need API endpoints)
-- Phase 5 can start after Phase 2 (to test loader)
-- Phase 6 is independent (can be done anytime)
+- Phase 1 must be complete before Phase 2 (need SDK first)
+- Phase 2 depends on Phase 1 (need protocol)
+- Phase 3 depends on Phase 2 (need plugin manager)
+- Phase 4 can run in parallel with Phase 2
+- Phase 5 depends on Phase 2, 3, 4
+- Phase 6 depends on Phase 5 (need API endpoints)
+- Phase 7 can run in parallel with Phase 6
+- Phase 8 can start after Phase 2 (to test loader)
+- Phase 9 can run anytime (independent)
+- Phase 10 can run alongside implementation
 
 ## Parallelization
 
-- Phase 1 + Phase 4.1 (UI skeleton) can start in parallel
-- Phase 5 (example) + Phase 4.2-4.3 (plugin view) can run in parallel
-- Documentation (5.2) can be written alongside implementation
+- Phase 1 + Phase 4 (DB schema) + Phase 6.1 (UI skeleton) can start in parallel
+- Phase 8 (examples) + Phase 6.2-6.3 (plugin view) can run in parallel
+- Documentation (10.1, 10.2) can be written alongside implementation
