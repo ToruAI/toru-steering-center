@@ -70,7 +70,7 @@ export function Plugins() {
     setLoadingLogs(true);
     try {
       const data = await api.getPluginLogs(plugin.id);
-      setLogs(data);
+      setLogs(data.logs);
     } catch (err) {
       console.error('Failed to fetch plugin logs:', err);
     } finally {

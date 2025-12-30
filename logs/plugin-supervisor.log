@@ -1,0 +1,22 @@
+{"timestamp":"2025-12-30T16:04:31.813868+00:00","level":"Info","message":"Plugin hello-plugin-python: spawned - PID: Some(22043)","plugin":"hello-plugin-python"}
+{"timestamp":"2025-12-30T16:04:31.916898+00:00","level":"Info","message":"Plugin hello-plugin-rust: spawned - PID: Some(22044)","plugin":"hello-plugin-rust"}
+{"timestamp":"2025-12-30T16:05:38.696084+00:00","level":"Info","message":"Plugin hello-plugin-python: spawned - PID: Some(22342)","plugin":"hello-plugin-python"}
+{"timestamp":"2025-12-30T16:05:38.927098+00:00","level":"Info","message":"Plugin hello-plugin-rust: spawned - PID: Some(22358)","plugin":"hello-plugin-rust"}
+{"timestamp":"2025-12-30T16:10:32.794953+00:00","level":"Info","message":"Plugin hello-plugin-python: spawned - PID: Some(23354)","plugin":"hello-plugin-python"}
+{"timestamp":"2025-12-30T16:11:38.759466+00:00","level":"Info","message":"Plugin hello-plugin-python: spawned - PID: Some(23862)","plugin":"hello-plugin-python"}
+{"timestamp":"2025-12-30T16:11:38.965393+00:00","level":"Info","message":"Plugin hello-plugin-rust: spawned - PID: Some(23863)","plugin":"hello-plugin-rust"}
+{"timestamp":"2025-12-30T16:16:06.500861+00:00","level":"Info","message":"Plugin hello-plugin-python: spawned - PID: Some(24649)","plugin":"hello-plugin-python"}
+{"timestamp":"2025-12-30T16:16:06.604140+00:00","level":"Info","message":"Plugin hello-plugin-rust: spawned - PID: Some(24650)","plugin":"hello-plugin-rust"}
+{"timestamp":"2025-12-30T16:17:54.148946+00:00","level":"Info","message":"Plugin hello-plugin-rust: spawned - PID: Some(25411)","plugin":"hello-plugin-rust"}
+{"timestamp":"2025-12-30T16:17:54.252211+00:00","level":"Info","message":"Plugin hello-plugin-python: spawned - PID: Some(25412)","plugin":"hello-plugin-python"}
+{"timestamp":"2025-12-30T16:18:16.996102+00:00","level":"Info","message":"Plugin hello-plugin-python: killed","plugin":"hello-plugin-python"}
+{"timestamp":"2025-12-30T16:18:16.996262+00:00","level":"Info","message":"Plugin hello-plugin-python: disabled","plugin":"hello-plugin-python"}
+{"timestamp":"2025-12-30T16:23:54.728819+00:00","level":"Info","message":"Plugin hello-plugin-python: enabled","plugin":"hello-plugin-python"}
+{"timestamp":"2025-12-30T16:24:10.193705+00:00","level":"Info","message":"Plugin hello-plugin-python: killed","plugin":"hello-plugin-python"}
+{"timestamp":"2025-12-30T16:24:10.193928+00:00","level":"Info","message":"Plugin hello-plugin-python: disabled","plugin":"hello-plugin-python"}
+{"timestamp":"2025-12-30T16:24:13.432624+00:00","level":"Info","message":"Plugin hello-plugin-python: enabled","plugin":"hello-plugin-python"}
+{"timestamp":"2025-12-30T16:24:18.372592+00:00","level":"Info","message":"Plugin hello-plugin-rust: killed","plugin":"hello-plugin-rust"}
+{"timestamp":"2025-12-30T16:24:18.372800+00:00","level":"Info","message":"Plugin hello-plugin-rust: disabled","plugin":"hello-plugin-rust"}
+{"timestamp":"2025-12-30T16:24:20.382079+00:00","level":"Info","message":"Plugin hello-plugin-rust: killed","plugin":"hello-plugin-rust"}
+{"timestamp":"2025-12-30T16:24:20.382305+00:00","level":"Info","message":"Plugin hello-plugin-rust: disabled","plugin":"hello-plugin-rust"}
+{"timestamp":"2025-12-30T16:24:23.281232+00:00","level":"Info","message":"Plugin hello-plugin-rust: enabled","plugin":"hello-plugin-rust"}

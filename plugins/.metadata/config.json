@@ -1,0 +1,6 @@
+{
+  "plugins": {
+    "hello-plugin-python": true,
+    "hello-plugin-rust": true
+  }
+}

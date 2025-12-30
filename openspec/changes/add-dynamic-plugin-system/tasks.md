@@ -1,6 +1,6 @@
 # Tasks: Add Process-Isolated Plugin System
 
-**Progress:** 108/172 tasks completed (Phase 7: ✅ Complete, Phase 6: ✅ Complete, Phase 5: 10/12 done, 1 deferred, 1 blocked)
+**Progress:** 124/172 tasks completed (Phase 8: ✅ Complete, Phase 7: ✅ Complete, Phase 6: ✅ Complete, Phase 5: 10/12 done, 1 deferred, 1 blocked)
 
 ## Phase 1: Plugin Protocol & Rust SDK
 
@@ -202,25 +202,27 @@ These tests should be run after Phase 8 (Example Plugins) is complete, when we h
 
 ## Phase 8: Example Plugins
 
+**Status:** ✅ Complete (2025-12-30)
+
 ### 8.1 Rust Plugin Example
-- [ ] 8.1.1 Create `examples/hello-plugin-rust/` directory
-- [ ] 8.1.2 Create Cargo.toml with toru-plugin-api dependency
-- [ ] 8.1.3 Implement ToruPlugin trait
-- [ ] 8.1.4 Create simple frontend (Vite + React)
-- [ ] 8.1.5 Embed frontend with include_bytes!
-- [ ] 8.1.6 Add --metadata flag support
-- [ ] 8.1.7 Add build script (build.sh)
-- [ ] 8.1.8 Test installation and loading
+- [x] 8.1.1 Create `examples/hello-plugin-rust/` directory
+- [x] 8.1.2 Create Cargo.toml with toru-plugin-api dependency
+- [x] 8.1.3 Implement ToruPlugin trait
+- [x] 8.1.4 Create simple frontend (Vite + React)
+- [x] 8.1.5 Embed frontend with include_bytes!
+- [x] 8.1.6 Add --metadata flag support
+- [x] 8.1.7 Add build script (build.sh)
+- [x] 8.1.8 Test installation and loading
 
 ### 8.2 Python Plugin Example
-- [ ] 8.2.1 Create `examples/hello-plugin-python/` directory
-- [ ] 8.2.2 Implement Unix socket server
-- [ ] 8.2.3 Implement message protocol (JSON)
-- [ ] 8.2.4 Implement simple HTTP handler
-- [ ] 8.2.5 Create simple frontend (vanilla JS)
-- [ ] 8.2.6 Add --metadata flag support
-- [ ] 8.2.7 Add build script (build.sh)
-- [ ] 8.2.8 Test installation and loading
+- [x] 8.2.1 Create `examples/hello-plugin-python/` directory
+- [x] 8.2.2 Implement Unix socket server
+- [x] 8.2.3 Implement message protocol (JSON)
+- [x] 8.2.4 Implement simple HTTP handler
+- [x] 8.2.5 Create simple frontend (vanilla JS)
+- [x] 8.2.6 Add --metadata flag support
+- [x] 8.2.7 Add build script (build.sh)
+- [x] 8.2.8 Test installation and loading
 
 ## Phase 9: Licensing (Optional - for Proprietary Plugins)
 

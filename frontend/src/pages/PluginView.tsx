@@ -23,7 +23,7 @@ export function PluginView() {
 
   // Plugin API provided to the plugin
   const pluginAPI: PluginAPI = {
-    fetch,
+    fetch: window.fetch.bind(window),
     navigate,
     showToast: (message, type = 'info') => {
       // Simple toast implementation using window events
@@ -60,8 +60,9 @@ export function PluginView() {
         // Wait for the script to load
         scriptElement.onload = () => {
           // The plugin should have exposed a global object with mount/unmount functions
-          const globalKey = `toru_plugin_${pluginId}`;
-          const pluginGlobal = (window as any)[globalKey];
+          // Try both conventions: window.ToruPlugins[pluginId] and window.toru_plugin_{pluginId}
+          const pluginGlobal = (window as any).ToruPlugins?.[pluginId] ||
+                               (window as any)[`toru_plugin_${pluginId}`];
 
           if (!pluginGlobal || typeof pluginGlobal.mount !== 'function' || typeof pluginGlobal.unmount !== 'function') {
             throw new Error('Plugin bundle is invalid: missing mount/unmount functions');

@@ -11,6 +11,7 @@ use axum::{
 use rust_embed::RustEmbed;
 use std::env;
 use std::net::SocketAddr;
+use std::path::PathBuf;
 use std::sync::Arc;
 use sysinfo::System;
 use tokio::sync::Mutex;
@@ -73,10 +74,14 @@ async fn main() -> anyhow::Result<()> {
     tracing::info!("Instance ID: {}", instance_id);
 
     // Initialize plugin supervisor
+    let log_dir = env::var("TORU_LOG_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| PathBuf::from("./logs"));
     let supervisor = match crate::services::plugins::PluginSupervisor::new(
         "./plugins",
         10, // max 10 consecutive restarts before disabling
         instance_id.clone(),
+        log_dir,
     ) {
         Ok(s) => {
             let sup = Arc::new(Mutex::new(s));
@@ -244,6 +249,9 @@ fn print_help() {
     println!("    STEERING_PORT        Port to listen on");
     println!("    STEERING_HOST        Host to bind to");
     println!("    RUST_LOG             Log level (e.g., debug, info, warn, error)");
+    println!("    TORU_LOG_DIR         Directory for plugin logs [default: ./logs]");
+    println!("    PRODUCTION           Set to 'true' for production mode");
+    println!("    SECURE_COOKIES       Set to 'true' to mark cookies as Secure");
     println!();
     println!("EXAMPLES:");
     println!("    steering-center                    # Start on localhost:3000");

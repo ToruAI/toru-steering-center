@@ -45,15 +45,17 @@ impl PluginSupervisor {
     /// * `plugins_dir` - Directory containing plugin .binary files
     /// * `max_restarts` - Maximum restart attempts before disabling a plugin
     /// * `instance_id` - Unique instance ID to pass to plugins
-    pub fn new<P: AsRef<Path>>(
+    /// * `log_dir` - Directory for plugin logs (defaults to ./logs if not provided)
+    pub fn new<P: AsRef<Path>, L: AsRef<Path>>(
         plugins_dir: P,
         max_restarts: u32,
         instance_id: String,
+        log_dir: L,
     ) -> Result<Self> {
         let plugins_dir = plugins_dir.as_ref().to_path_buf();
         let metadata_dir = plugins_dir.join(".metadata");
         let sockets_dir = PathBuf::from("/tmp/toru-plugins");
-        let log_dir = PathBuf::from("/var/log/toru");
+        let log_dir = log_dir.as_ref().to_path_buf();
 
         // Create directories if they don't exist
         fs::create_dir_all(&plugins_dir).context("Failed to create plugins directory")?;
