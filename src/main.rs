@@ -82,6 +82,7 @@ async fn main() -> anyhow::Result<()> {
         10, // max 10 consecutive restarts before disabling
         instance_id.clone(),
         log_dir,
+        db.clone(),
     ) {
         Ok(s) => {
             let sup = Arc::new(Mutex::new(s));

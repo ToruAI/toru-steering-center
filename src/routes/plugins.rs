@@ -1,11 +1,13 @@
 use axum::{
+    body::Body,
     extract::{Path, Query, State},
-    http::{header, StatusCode},
-    response::{IntoResponse, Json},
-    routing::{get, post},
+    http::{header, HeaderMap, HeaderValue, Method, StatusCode, Uri},
+    response::{IntoResponse, Json, Response},
+    routing::{any, get, post},
     Router,
 };
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
@@ -71,14 +73,131 @@ impl From<&PluginProcess> for PluginStatus {
 }
 
 pub fn create_plugin_router() -> Router<AppState> {
-    Router::new()
-        // Admin-only routes
+    // Admin routes router
+    let admin_router = Router::new()
         .route("/", get(list_plugins))
         .route("/:id", get(get_plugin))
         .route("/:id/enable", post(enable_plugin))
         .route("/:id/disable", post(disable_plugin))
         .route("/:id/bundle.js", get(get_plugin_bundle))
-        .route("/:id/logs", get(get_plugin_logs))
+        .route("/:id/logs", get(get_plugin_logs));
+
+    // Dynamic plugin routes (separate path prefix to avoid conflicts)
+    // Plugins declare a route in metadata (e.g., "/hello-plugin")
+    // Requests to /api/plugins/route/<plugin-route>/... are forwarded to the plugin
+    let plugin_routes_router = Router::new()
+        .route("/*path", any(forward_to_plugin));
+
+    // Combine routers - admin routes checked first
+    Router::new()
+        .merge(admin_router)
+        .nest("/route", plugin_routes_router)
+}
+
+/// Forward HTTP request to a plugin
+///
+/// This handler receives requests for dynamic plugin routes.
+/// Routes are checked against enabled plugins' route metadata.
+/// If no plugin matches, returns 404.
+///
+/// # Route Pattern
+/// /api/plugins/*path
+///
+/// # Example
+/// Request: GET /api/plugins/hello-plugin/some/path?query=1
+/// - Path: "hello-plugin/some/path"
+/// - Plugin route: "/hello-plugin"
+/// - Plugin path: "/some/path?query=1"
+async fn forward_to_plugin(
+    State(state): State<AppState>,
+    Path(path): Path<String>,
+    method: Method,
+    uri: Uri,
+    headers: HeaderMap,
+    body: Body,
+) -> Result<Response, StatusCode> {
+    // Split path into route name and remaining path
+    let (plugin_route, remaining) = path.split_once('/').unwrap_or((&path, ""));
+
+    // Check if this path matches an enabled plugin's route
+    let supervisor = state
+        .supervisor
+        .as_ref()
+        .ok_or(StatusCode::NOT_IMPLEMENTED)?
+        .lock()
+        .await;
+
+    let plugin_id = supervisor
+        .get_plugin_for_route(&format!("/{}", plugin_route))
+        .ok_or(StatusCode::NOT_FOUND)?;
+
+    // Build the path to send to plugin
+    let plugin_path = if remaining.is_empty() {
+        "/".to_string()
+    } else {
+        format!("/{}", remaining)
+    };
+
+    // Include query string
+    let full_path = if let Some(query) = uri.query() {
+        format!("{}?{}", plugin_path, query)
+    } else {
+        plugin_path
+    };
+
+    // Convert Axum headers to HashMap
+    let mut plugin_headers = HashMap::new();
+    for (name, value) in headers.iter() {
+        if let Some(value_str) = value.to_str().ok() {
+            plugin_headers.insert(name.to_string(), value_str.to_string());
+        }
+    }
+
+    // Read request body
+    let body_bytes = axum::body::to_bytes(body, usize::MAX)
+        .await
+        .map_err(|_| StatusCode::BAD_REQUEST)?;
+    let body_str = if body_bytes.is_empty() {
+        None
+    } else {
+        String::from_utf8(body_bytes.to_vec()).ok()
+    };
+
+    // Build HTTP request for plugin
+    let http_request = toru_plugin_api::HttpRequest {
+        method: method.to_string(),
+        path: full_path,
+        headers: plugin_headers,
+        body: body_str,
+    };
+
+    // Forward to plugin
+    let response = supervisor
+        .forward_http_request(&plugin_id, &http_request)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to forward request to plugin {}: {}", plugin_id, e);
+            StatusCode::BAD_GATEWAY
+        })?;
+
+    // Build Axum response from plugin response
+    let mut builder = Response::builder().status(response.status);
+
+    // Set headers
+    for (name, value) in response.headers {
+        if let Ok(header_value) = HeaderValue::from_str(&value) {
+            if let Some(header_name) = name.parse::<axum::http::HeaderName>().ok() {
+                builder = builder.header(header_name, header_value);
+            }
+        }
+    }
+
+    // Set body
+    let response = builder
+        .body(axum::body::Body::from(response.body.unwrap_or_default()))
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(response)
 }
 
 /// List all plugins

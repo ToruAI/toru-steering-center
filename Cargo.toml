@@ -29,6 +29,7 @@ time = "0.3"
 subtle = "2.6.1"
 dotenv = "0.15"
 toru-plugin-api = { path = "toru-plugin-api" }
+async-trait = "0.1"
 libc = "0.2"
 
 [dev-dependencies]

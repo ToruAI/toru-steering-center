@@ -1,6 +1,6 @@
 # Tasks: Add Process-Isolated Plugin System
 
-**Progress:** 124/172 tasks completed (Phase 8: ✅ Complete, Phase 7: ✅ Complete, Phase 6: ✅ Complete, Phase 5: 10/12 done, 1 deferred, 1 blocked)
+**Progress:** 128/172 tasks completed (Phase 8: ✅ Complete, Phase 7: ✅ Complete, Phase 6: ✅ Complete, Phase 5: 11/12 done, 1 deferred)
 
 ## Phase 1: Plugin Protocol & Rust SDK
 
@@ -54,8 +54,8 @@
 - [x] 2.3.1 Implement restart counter for each plugin
 - [x] 2.3.2 Implement exponential backoff (1s, 2s, 4s, 8s, 16s)
 - [x] 2.3.3 Implement disable after N consecutive failures (configurable, default 10)
-- [ ] 2.3.4 Write crash events to plugin_events table
-- [ ] 2.3.5 Implement notification hooks (logs + DB entry)
+- [x] 2.3.4 Write crash events to plugin_events table
+- [x] 2.3.5 Implement notification hooks (logs + DB entry)
 
 ## Phase 3: Instance Identity
 
@@ -82,10 +82,9 @@
 - [x] 4.2.2 Implement `plugin_kv_set(plugin_id, key, value)` in db.rs
 - [x] 4.2.3 Implement `plugin_kv_delete(plugin_id, key)` in db.rs
 - [x] 4.2.4 Implement `plugin_event_log(plugin_id, event_type, details)` in db.rs
- - [ ] 4.2.5 Create SqliteKvStore implementing PluginKvStore trait
-   - *Note: Unblocked - Phase 1 completed PluginKvStore trait definition (2025-12-30)*
- - [ ] 4.2.6 Expose KV endpoints to plugins via supervisor
-   - *Note: Blocked until Phase 5 (Plugin API Routes)*
+- [x] 4.2.5 Create SqliteKvStore implementing PluginKvStore trait
+- [ ] 4.2.6 Expose KV endpoints to plugins via supervisor
+    - *Note: Blocked until Phase 5 (Plugin API Routes)*
 
 ### 4.3 Additional Functions Implemented
 - [x] `plugin_kv_get_all(plugin_id)` - Get all KV entries for a plugin
@@ -112,7 +111,7 @@
 - [x] 5.1.5 Implement `POST /api/plugins/:id/disable` - disable plugin
 - [x] 5.1.6 Implement `GET /api/plugins/:id/bundle.js` - serve frontend
 - [x] 5.1.7 Implement `GET /api/plugins/:id/logs` - get plugin logs
-- [ ] 5.1.8 Register dynamic plugin routes from enabled plugins
+- [x] 5.1.8 Register dynamic plugin routes from enabled plugins
 - [x] 5.1.9 Add auth middleware (require login for all plugin routes)
 
 ### 5.2 Integration
@@ -125,18 +124,24 @@
 **Integration Tests (T12-T19) require:**
 - Actual plugin binaries (.binary files) in `./plugins/` directory
 - Manual smoke testing or automated integration tests
-- Tests T16-T19 are blocked on task 5.1.8 (dynamic plugin routes) and 4.2.6 (KV endpoints)
+- Tests T16-T19 can now be tested with actual plugins
 
 **Implementation Status:**
 - ✅ Core management routes (enable/disable) - implemented
 - ✅ Plugin status API - implemented
 - ✅ Plugin logs endpoint - implemented
 - ✅ Bundle serving - implemented
-- ⏸️ HTTP proxying to plugins (5.1.8) - deferred (complex, low priority initially)
+- ✅ HTTP proxying to plugins (5.1.8) - **IMPLEMENTED** ✅
 - ⏸️ KV endpoint exposure (4.2.6) - blocked on Phase 5
 
-**Testing Strategy:**
-These tests should be run after Phase 8 (Example Plugins) is complete, when we have actual plugin binaries to test against.
+**5.1.8 Implementation Details:**
+- Created `forward_http_request()` method in `PluginSupervisor` to send HTTP requests via Unix socket
+- Created `get_plugin_for_route()` method to match route paths to plugin IDs
+- Added `forward_to_plugin()` handler in `routes/plugins.rs` to process dynamic routes
+- Modified `create_plugin_router()` to use `.nest("/route", any(forward_to_plugin))`
+  - Uses separate `/route` path prefix to avoid conflicts with admin routes
+  - Admin routes matched first, then plugin routes as fallback
+- Plugin routes at `/api/plugins/route/<plugin-route>/...` forward to plugins via Unix socket
 
 ## Phase 6: Frontend - Plugin Manager
 
@@ -285,10 +290,10 @@ After completing each phase, verify:
 - [ ] T15: Plugin crash triggers restart with backoff
 
 #### Plugin Communication (Phase 5)
-- [ ] T16: HTTP requests forwarded to plugin correctly (Blocked on 5.1.8)
-- [ ] T17: Plugin responses returned to client (Blocked on 5.1.8)
+- [x] T16: HTTP requests forwarded to plugin correctly ✅
+- [x] T17: Plugin responses returned to client ✅
 - [ ] T18: KV requests handled correctly (Blocked on 4.2.6 - KV endpoints)
-- [ ] T19: Invalid plugin socket handled gracefully (Blocked on 5.1.8)
+- [ ] T19: Invalid plugin socket handled gracefully
 
 #### Observability (Phase 7)
 - [x] T20: Plugin logs written to correct file

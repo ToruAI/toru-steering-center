@@ -9,7 +9,7 @@ use tokio::net::UnixStream;
 use tokio::process::Child;
 use tracing::{debug, error, info, warn};
 
-use toru_plugin_api::{HttpMessageResponse, HttpRequest, Message, PluginMetadata};
+use toru_plugin_api::{HttpMessageResponse, HttpRequest, HttpResponse, Message, PluginMetadata};
 
 use crate::db::DbPool;
 use super::logging::{LogLevel, PluginLogger, SupervisorLogger};
@@ -719,7 +719,7 @@ impl PluginSupervisor {
 
         // Use the protocol to send the message
         use toru_plugin_api::PluginProtocol;
-        let mut protocol = PluginProtocol::new();
+        let protocol = PluginProtocol::new();
         protocol.write_message(&mut stream, &message).await
             .context("Failed to send HTTP request to plugin")?;
 
@@ -727,51 +727,13 @@ impl PluginSupervisor {
         let response_msg = protocol.read_message(&mut stream).await
             .context("Failed to read HTTP response from plugin")?;
 
-        // Extract the HTTP response - parse JSON to get status/headers/body
-        let response_value = serde_json::to_value(&response_msg)
-            .context("Failed to serialize response message")?;
-
-        // Extract HTTP response fields from nested payload
-        let http_response = toru_plugin_api::HttpMessageResponse {
-            status: response_value
-                .get("payload")
-                .and_then(|p| {
-                    // Check if payload has "http" field (nested response)
-                    if p.get("http").is_some() {
-                        p.get("http")
-                            .and_then(|h| h.get("status"))
-                    } else {
-                        // Direct payload without nesting
-                        p.get("status")
-                    }
-                })
-                .and_then(|s| s.as_u64())
-                .unwrap_or(500) as u16,
-            headers: response_value
-                .get("payload")
-                .and_then(|p| {
-                    if p.get("http").is_some() {
-                        p.get("http").and_then(|h| h.get("headers"))
-                    } else {
-                        p.get("headers")
-                    }
-                })
-                .and_then(|h| serde_json::from_value(h.clone()).ok())
-                .unwrap_or_default(),
-            body: response_value
-                .get("payload")
-                .and_then(|p| {
-                    if p.get("http").is_some() {
-                        p.get("http").and_then(|h| h.get("body"))
-                    } else {
-                        p.get("body")
-                    }
-                })
-                .and_then(|b| b.as_str())
-                .map(|s| s.to_string()),
+        // Extract the HTTP response
+        let response = match response_msg.payload {
+            toru_plugin_api::MessagePayload::Http { request_id: _, payload } => payload,
+            _ => return Err(anyhow::anyhow!("Unexpected response from plugin")),
         };
 
-        Ok(http_response)
+        Ok(response)
     }
 
     /// Get the plugin ID that owns a given route path

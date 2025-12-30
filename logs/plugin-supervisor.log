@@ -20,3 +20,12 @@
 {"timestamp":"2025-12-30T16:24:20.382079+00:00","level":"Info","message":"Plugin hello-plugin-rust: killed","plugin":"hello-plugin-rust"}
 {"timestamp":"2025-12-30T16:24:20.382305+00:00","level":"Info","message":"Plugin hello-plugin-rust: disabled","plugin":"hello-plugin-rust"}
 {"timestamp":"2025-12-30T16:24:23.281232+00:00","level":"Info","message":"Plugin hello-plugin-rust: enabled","plugin":"hello-plugin-rust"}
+{"timestamp":"2025-12-30T17:06:56.179952+00:00","level":"Info","message":"Plugin hello-plugin-rust: started - {\"pid\":41269}","plugin":"hello-plugin-rust"}
+{"timestamp":"2025-12-30T17:06:56.326849+00:00","level":"Info","message":"Plugin hello-plugin-python: started - {\"pid\":41276}","plugin":"hello-plugin-python"}
+{"timestamp":"2025-12-30T17:07:57.486295+00:00","level":"Info","message":"Plugin hello-plugin-python: started - {\"pid\":41837}","plugin":"hello-plugin-python"}
+{"timestamp":"2025-12-30T17:07:57.693202+00:00","level":"Info","message":"Plugin hello-plugin-rust: started - {\"pid\":41838}","plugin":"hello-plugin-rust"}
+{"timestamp":"2025-12-30T17:10:15.830391+00:00","level":"Info","message":"Plugin hello-plugin-rust: started - {\"pid\":42731}","plugin":"hello-plugin-rust"}
+{"timestamp":"2025-12-30T17:10:15.947026+00:00","level":"Info","message":"Plugin hello-plugin-python: started - {\"pid\":42752}","plugin":"hello-plugin-python"}
+{"timestamp":"2025-12-30T17:10:43.507402+00:00","level":"Info","message":"Plugin hello-plugin-rust: killed","plugin":"hello-plugin-rust"}
+{"timestamp":"2025-12-30T17:10:43.509458+00:00","level":"Info","message":"Plugin hello-plugin-rust: disabled","plugin":"hello-plugin-rust"}
+{"timestamp":"2025-12-30T17:10:48.490693+00:00","level":"Info","message":"Plugin hello-plugin-rust: enabled","plugin":"hello-plugin-rust"}

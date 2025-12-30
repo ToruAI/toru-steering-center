@@ -719,7 +719,7 @@ impl PluginSupervisor {
 
         // Use the protocol to send the message
         use toru_plugin_api::PluginProtocol;
-        let mut protocol = PluginProtocol::new();
+        let protocol = PluginProtocol::new();
         protocol.write_message(&mut stream, &message).await
             .context("Failed to send HTTP request to plugin")?;
 
