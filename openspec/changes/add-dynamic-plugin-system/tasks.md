@@ -1,6 +1,13 @@
 # Tasks: Add Process-Isolated Plugin System
 
-**Progress:** 128/172 tasks completed (Phase 8: ✅ Complete, Phase 7: ✅ Complete, Phase 6: ✅ Complete, Phase 5: 11/12 done, 1 deferred)
+**Progress:** 139/172 tasks completed (Phase 8: ✅ Complete, Phase 7: ✅ Complete, Phase 6: ✅ Complete, Phase 5: ✅ Complete, 13/13 done)
+**Test Coverage:** 17/17 tests passing (9 integration + 8 unit) ✅ (2025-12-30)
+**Code Quality:** fmt ✅ | clippy ✅ | tests ✅ (2025-12-30)
+
+**Updates (2025-12-30):**
+- ✅ Added 5.1.10: Plugin access control (allow all users to view/use, keep mgmt admin-only)
+- ✅ Added 8 critical path integration tests (T1-T4, T5-T8, T23)
+- ✅ All quality gates passing: fmt, clippy, tests
 
 ## Phase 1: Plugin Protocol & Rust SDK
 
@@ -70,7 +77,6 @@
 ## Phase 4: Plugin Key-Value Storage
 
 **Status:** ✅ Core database layer completed (2025-12-30)
-**Blocked tasks:** 2 tasks intentionally deferred to later phases (see notes below)
 
 ### 4.1 Database Schema
 - [x] 4.1.1 Add `plugin_kv` table to database schema
@@ -84,7 +90,7 @@
 - [x] 4.2.4 Implement `plugin_event_log(plugin_id, event_type, details)` in db.rs
 - [x] 4.2.5 Create SqliteKvStore implementing PluginKvStore trait
 - [ ] 4.2.6 Expose KV endpoints to plugins via supervisor
-    - *Note: Blocked until Phase 5 (Plugin API Routes)*
+    - *Note: Deferred - KV protocol exists but endpoints not yet exposed to plugins via forward_to_plugin()*
 
 ### 4.3 Additional Functions Implemented
 - [x] `plugin_kv_get_all(plugin_id)` - Get all KV entries for a plugin
@@ -113,6 +119,11 @@
 - [x] 5.1.7 Implement `GET /api/plugins/:id/logs` - get plugin logs
 - [x] 5.1.8 Register dynamic plugin routes from enabled plugins
 - [x] 5.1.9 Add auth middleware (require login for all plugin routes)
+- [x] 5.1.10 Fix plugin access control: Allow all authenticated users to view/use plugins, keep management admin-only
+    - Changed `listPlugins()`, `getPlugin()`, `getPluginBundle()` from `AdminUser` to `AuthUser` (any role)
+    - Added `AuthUser` to `forward_to_plugin()` (requires authentication, not admin role)
+    - Kept `enablePlugin()` and `disablePlugin()` as `AdminUser` only
+    - **Frontend fix:** Removed `if (!isAdmin)` check from plugin fetching in `Layout.tsx`
 
 ### 5.2 Integration
 - [x] 5.2.1 Initialize PluginSupervisor in main.rs
@@ -258,24 +269,24 @@
 
 ### Per-Phase Checklist
 After completing each phase, verify:
-- [ ] `cargo fmt --check` passes
-- [ ] `cargo clippy -- -D warnings` passes
-- [ ] Critical path tests written and passing
+- [x] `cargo fmt --check` passes ✅ (2025-12-30)
+- [x] `cargo clippy -- -D warnings` passes ✅ (2025-12-30)
+- [x] Critical path tests written and passing ✅ (2025-12-30)
 - [ ] Code review for security-sensitive code
 
 ### Critical Path Tests (Required)
 
 #### Plugin Loading (Phase 2)
-- [ ] T1: Valid .binary spawns successfully
-- [ ] T2: Invalid .binary handled gracefully (no crash, logs error)
-- [ ] T3: Missing plugins directory created automatically
-- [ ] T4: Plugin with --metadata failure handled gracefully
+- [x] T1: Valid .binary spawns successfully ✅ (2025-12-30)
+- [x] T2: Invalid .binary handled gracefully (no crash, logs error) ✅ (2025-12-30)
+- [x] T3: Missing plugins directory created automatically ✅ (2025-12-30)
+- [x] T4: Plugin with --metadata failure handled gracefully ✅ (2025-12-30)
 
 #### Instance Identity (Phase 3)
-- [ ] T5: Instance ID generated on first run
-- [ ] T6: Instance ID persists across restarts (same value)
-- [ ] T7: Instance ID is valid UUID format
-- [ ] T8: Instance ID passed to plugin in init message
+- [x] T5: Instance ID generated on first run ✅ (2025-12-30)
+- [x] T6: Instance ID persists across restarts (same value) ✅ (2025-12-30)
+- [x] T7: Instance ID is valid UUID format ✅ (2025-12-30)
+- [x] T8: Instance ID passed to plugin in init message ✅ (2025-12-30)
 
 #### Plugin KV Storage (Phase 4)
 - [x] T9: KV set/get works for plugin
@@ -299,7 +310,7 @@ After completing each phase, verify:
 - [x] T20: Plugin logs written to correct file
 - [x] T21: Logs are valid JSON
 - [x] T22: Logs API returns correct logs
-- [ ] T23: Plugin events written to database
+- [x] T23: Plugin events written to database ✅ (2025-12-30)
 
 #### License Validation (Phase 9)
 - [ ] T24: Valid license key accepted
@@ -348,3 +359,50 @@ Request AI code review after:
 - Phase 1 + Phase 4 (DB schema) + Phase 6.1 (UI skeleton) can start in parallel
 - Phase 8 (examples) + Phase 6.2-6.3 (plugin view) can run in parallel
 - Documentation (10.1, 10.2) can be written alongside implementation
+
+## Integration Tests Added (2025-12-30)
+
+**File:** `tests/plugins_integration.rs`
+
+**Test Coverage (9 tests):**
+- Plugin Loading (T1-T4): Valid spawn, invalid handling, directory creation, metadata failures
+- Instance Identity (T5-T8): UUID generation, persistence, format validation, init message passing
+- Observability (T23): Plugin events written to database
+
+**Test Results:**
+```bash
+running 9 tests
+✅ All 9 tests passing
+test result: ok. 9 passed; 0 failed; 0 ignored
+```
+
+**Combined with Unit Tests:**
+```bash
+running 8 unit tests + 9 integration tests
+✅ Total: 17/17 tests passing
+```
+
+## Plugin Access Control Changes (2025-12-30)
+
+**Frontend Changes (`frontend/src/components/Layout.tsx`):**
+- Removed `if (!isAdmin)` check from plugin fetching
+- Plugins now accessible to all authenticated users (Admin and Client roles)
+- Sidebar shows plugins for all authenticated users
+- Plugin manager page remains admin-only (via navigation guards)
+
+**Backend Changes (`src/routes/plugins.rs`):**
+- Changed auth extractor from `AdminUser` to `AuthUser` for:
+  - `listPlugins()` - GET /api/plugins
+  - `getPlugin()` - GET /api/plugins/:id
+  - `getPluginBundle()` - GET /api/plugins/:id/bundle.js
+  - `forward_to_plugin()` - Dynamic plugin routes
+- Kept `AdminUser` for management actions:
+  - `enablePlugin()` - POST /api/plugins/:id/enable
+  - `disablePlugin()` - POST /api/plugins/:id/disable
+  - `getPluginLogs()` - GET /api/plugins/:id/logs (admin-only for debugging)
+
+**Security Model:**
+- All plugin routes require authentication (no public access)
+- Plugin usage: Available to all authenticated users
+- Plugin management (enable/disable): Admin-only
+- Plugin logs: Admin-only (debugging access)

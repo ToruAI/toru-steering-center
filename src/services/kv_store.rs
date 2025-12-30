@@ -107,7 +107,13 @@ mod tests {
         kv2.set("shared_key", "value-b").await.unwrap();
 
         // Verify isolation
-        assert_eq!(kv1.get("shared_key").await.unwrap(), Some("value-a".to_string()));
-        assert_eq!(kv2.get("shared_key").await.unwrap(), Some("value-b".to_string()));
+        assert_eq!(
+            kv1.get("shared_key").await.unwrap(),
+            Some("value-a".to_string())
+        );
+        assert_eq!(
+            kv2.get("shared_key").await.unwrap(),
+            Some("value-b".to_string())
+        );
     }
 }

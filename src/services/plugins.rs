@@ -11,8 +11,8 @@ use tracing::{debug, error, info, warn};
 
 use toru_plugin_api::{HttpMessageResponse, HttpRequest, Message, PluginMetadata};
 
-use crate::db::DbPool;
 use super::logging::{LogLevel, PluginLogger, SupervisorLogger};
+use crate::db::DbPool;
 
 /// Represents a running plugin process
 #[derive(Debug)]
@@ -236,10 +236,14 @@ impl PluginSupervisor {
             plugin_id,
             "started",
             LogLevel::Info,
-            Some(&serde_json::json!({
-                "pid": pid,
-            }).to_string())
-        ).await;
+            Some(
+                &serde_json::json!({
+                    "pid": pid,
+                })
+                .to_string(),
+            ),
+        )
+        .await;
 
         Ok(())
     }
@@ -287,12 +291,8 @@ impl PluginSupervisor {
         info!("Plugin {} killed and disabled", plugin_id);
 
         // Notify plugin event via notification hooks
-        self.notify_plugin_event(
-            plugin_id,
-            "killed",
-            LogLevel::Info,
-            None,
-        ).await;
+        self.notify_plugin_event(plugin_id, "killed", LogLevel::Info, None)
+            .await;
 
         Ok(())
     }
@@ -518,12 +518,8 @@ impl PluginSupervisor {
         info!("Plugin {} enabled", plugin_id);
 
         // Notify plugin event via notification hooks
-        self.notify_plugin_event(
-            plugin_id,
-            "enabled",
-            LogLevel::Info,
-            None,
-        ).await;
+        self.notify_plugin_event(plugin_id, "enabled", LogLevel::Info, None)
+            .await;
 
         Ok(())
     }
@@ -536,12 +532,8 @@ impl PluginSupervisor {
         info!("Plugin {} disabled", plugin_id);
 
         // Notify plugin event via notification hooks
-        self.notify_plugin_event(
-            plugin_id,
-            "disabled",
-            LogLevel::Info,
-            None,
-        ).await;
+        self.notify_plugin_event(plugin_id, "disabled", LogLevel::Info, None)
+            .await;
 
         Ok(())
     }
@@ -720,16 +712,20 @@ impl PluginSupervisor {
         // Use the protocol to send the message
         use toru_plugin_api::PluginProtocol;
         let mut protocol = PluginProtocol::new();
-        protocol.write_message(&mut stream, &message).await
+        protocol
+            .write_message(&mut stream, &message)
+            .await
             .context("Failed to send HTTP request to plugin")?;
 
         // Read the response
-        let response_msg = protocol.read_message(&mut stream).await
+        let response_msg = protocol
+            .read_message(&mut stream)
+            .await
             .context("Failed to read HTTP response from plugin")?;
 
         // Extract the HTTP response - parse JSON to get status/headers/body
-        let response_value = serde_json::to_value(&response_msg)
-            .context("Failed to serialize response message")?;
+        let response_value =
+            serde_json::to_value(&response_msg).context("Failed to serialize response message")?;
 
         // Extract HTTP response fields from nested payload
         let http_response = toru_plugin_api::HttpMessageResponse {
@@ -738,8 +734,7 @@ impl PluginSupervisor {
                 .and_then(|p| {
                     // Check if payload has "http" field (nested response)
                     if p.get("http").is_some() {
-                        p.get("http")
-                            .and_then(|h| h.get("status"))
+                        p.get("http").and_then(|h| h.get("status"))
                     } else {
                         // Direct payload without nesting
                         p.get("status")
@@ -821,11 +816,15 @@ impl PluginSupervisor {
                 plugin_id,
                 "disabled_after_max_restarts",
                 LogLevel::Error,
-                Some(&serde_json::json!({
-                    "reason": "max_restarts_exceeded",
-                    "restart_count": restart_count,
-                }).to_string())
-            ).await;
+                Some(
+                    &serde_json::json!({
+                        "reason": "max_restarts_exceeded",
+                        "restart_count": restart_count,
+                    })
+                    .to_string(),
+                ),
+            )
+            .await;
 
             warn!(
                 "Plugin {} disabled after {} crashes",
@@ -854,12 +853,16 @@ impl PluginSupervisor {
             plugin_id,
             "restarting_with_backoff",
             LogLevel::Warn,
-            Some(&serde_json::json!({
-                "reason": "plugin_crashed",
-                "restart_attempt": restart_count,
-                "backoff_delay_ms": delay_ms,
-            }).to_string())
-        ).await;
+            Some(
+                &serde_json::json!({
+                    "reason": "plugin_crashed",
+                    "restart_attempt": restart_count,
+                    "backoff_delay_ms": delay_ms,
+                })
+                .to_string(),
+            ),
+        )
+        .await;
 
         warn!(
             "Plugin {} crashed, restarting in {}ms (attempt #{})",

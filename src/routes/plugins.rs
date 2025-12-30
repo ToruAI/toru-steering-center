@@ -12,7 +12,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use crate::routes::api::AppState;
-use crate::routes::auth::AdminUser;
+use crate::routes::auth::{AdminUser, AuthUser};
 use crate::services::logging::LogLevel;
 use crate::services::plugins::PluginProcess;
 
@@ -85,8 +85,7 @@ pub fn create_plugin_router() -> Router<AppState> {
     // Dynamic plugin routes (separate path prefix to avoid conflicts)
     // Plugins declare a route in metadata (e.g., "/hello-plugin")
     // Requests to /api/plugins/route/<plugin-route>/... are forwarded to the plugin
-    let plugin_routes_router = Router::new()
-        .route("/*path", any(forward_to_plugin));
+    let plugin_routes_router = Router::new().route("/*path", any(forward_to_plugin));
 
     // Combine routers - admin routes checked first
     Router::new()
@@ -109,6 +108,7 @@ pub fn create_plugin_router() -> Router<AppState> {
 /// - Plugin route: "/hello-plugin"
 /// - Plugin path: "/some/path?query=1"
 async fn forward_to_plugin(
+    _auth: AuthUser, // Require authentication (any role)
     State(state): State<AppState>,
     Path(path): Path<String>,
     method: Method,
@@ -148,7 +148,7 @@ async fn forward_to_plugin(
     // Convert Axum headers to HashMap
     let mut plugin_headers = HashMap::new();
     for (name, value) in headers.iter() {
-        if let Some(value_str) = value.to_str().ok() {
+        if let Ok(value_str) = value.to_str() {
             plugin_headers.insert(name.to_string(), value_str.to_string());
         }
     }
@@ -186,7 +186,7 @@ async fn forward_to_plugin(
     // Set headers
     for (name, value) in response.headers {
         if let Ok(header_value) = HeaderValue::from_str(&value) {
-            if let Some(header_name) = name.parse::<axum::http::HeaderName>().ok() {
+            if let Ok(header_name) = name.parse::<axum::http::HeaderName>() {
                 builder = builder.header(header_name, header_value);
             }
         }
@@ -200,9 +200,9 @@ async fn forward_to_plugin(
     Ok(response)
 }
 
-/// List all plugins
+/// List all plugins (available to all authenticated users)
 async fn list_plugins(
-    _auth: AdminUser,
+    _auth: AuthUser, // Changed from AdminUser to AuthUser
     State(state): State<AppState>,
 ) -> Result<Json<Vec<PluginStatus>>, StatusCode> {
     let supervisor = state
@@ -218,9 +218,9 @@ async fn list_plugins(
     Ok(Json(plugin_statuses))
 }
 
-/// Get plugin details
+/// Get plugin details (available to all authenticated users)
 async fn get_plugin(
-    _auth: AdminUser,
+    _auth: AuthUser, // Changed from AdminUser to AuthUser
     State(state): State<AppState>,
     Path(id): Path<String>,
 ) -> Result<Json<PluginStatus>, StatusCode> {
@@ -305,9 +305,9 @@ async fn disable_plugin(
     Ok(StatusCode::NO_CONTENT)
 }
 
-/// Get plugin frontend bundle
+/// Get plugin frontend bundle (available to all authenticated users)
 async fn get_plugin_bundle(
-    _auth: AdminUser,
+    _auth: AuthUser, // Changed from AdminUser to AuthUser
     State(state): State<AppState>,
     Path(id): Path<String>,
 ) -> Result<impl IntoResponse, StatusCode> {

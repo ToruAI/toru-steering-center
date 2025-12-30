@@ -23,10 +23,10 @@ export function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [enabledPlugins, setEnabledPlugins] = useState<Plugin[]>([]);
 
-  // Fetch enabled plugins on mount
+  // Fetch enabled plugins on mount (all authenticated users can see plugins)
   useEffect(() => {
     const fetchPlugins = async () => {
-      if (!isAdmin) return;
+      if (!user) return; // Only fetch if authenticated
       try {
         const plugins = await api.listPlugins();
         // Filter for enabled and running plugins
@@ -38,7 +38,7 @@ export function Layout() {
     };
 
     fetchPlugins();
-  }, [isAdmin]);
+  }, [user]);
 
   const allNavItems = [
     { path: '/', icon: Home, label: 'Dashboard', public: true },
