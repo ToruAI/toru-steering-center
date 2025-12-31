@@ -1,6 +1,6 @@
 ---
 created: 2025-12-30T13:56:45.272Z
-updated: 2025-12-30T15:20:16.530Z
+updated: 2025-12-31T13:59:40.115Z
 type: memory
 ---
 ## 2025-12-30T13:52:00.000Z
@@ -151,3 +151,48 @@ toru-plugin-api/
 
 **Phase 6 Progress:** 26/26 tasks completed
 **Overall Progress:** 92/172 tasks (53.5%)
+
+## 2025-12-31T13:59:40.115Z
+# Licensing Extraction Decision (2025-12-31)
+
+## Context
+Plugin system proposal (`add-dynamic-plugin-system`) included both core plugin functionality AND licensing. This was too much scope for a single change.
+
+## Action Taken
+Extracted licensing into separate proposal `add-plugin-licensing` to:
+- Simplify plugin system MVP (remove blocking dependencies)
+- Enable faster completion of core plugin features
+- Make licensing optional enhancement for future use
+
+## What Moved to `add-plugin-licensing`:
+- Instance Identity (UUID v4 generation/persistence)
+- Plugin Licensing (HMAC-SHA256 validation)
+- License Generator CLI tool (internal)
+- License validation in plugin SDKs
+- Examples with license validation (Rust + Python)
+
+## What Stayed in `add-dynamic-plugin-system`:
+- All phases 1-7: Protocol, supervision, KV, routes, frontend, logging, examples
+- Phase 8: Documentation (restored - was accidentally removed)
+- 125/140 tasks (Phase 8 in progress)
+- 15/15 tests passing
+
+## Validation
+Both changes pass `openspec validate --strict`.
+
+## Documentation Note
+Phase 8 (Documentation) was initially deleted in error, then restored. Critical docs include:
+- toru-plugin-api README ✅
+- Python plugin guide (pending)
+- Plugin structure and build process (pending)
+- Frontend mount API (pending)
+- Plugin lifecycle and supervision (pending)
+- Protocol specification (pending)
+- Plugin manager internals (pending)
+- Logging format and TORIS integration (pending)
+- Architecture/message flow diagrams (pending)
+
+## Impact
+- Plugin system MVP is now smaller and focused
+- Licensing can be added later when actually needed
+- No blocking dependencies between the two features

@@ -26,7 +26,7 @@ The system SHALL communicate with plugins via Unix domain sockets using JSON mes
 
 #### Scenario: Send init message
 - **WHEN** a plugin process is spawned
-- **THEN** the system sends an init message with instance_id, socket_path, and log_path
+- **THEN** the system sends an init message with socket_path and log_path
 
 #### Scenario: Forward HTTP request
 - **WHEN** an HTTP request is received for a plugin route
@@ -176,42 +176,6 @@ The system SHALL provide a page to view and manage installed plugins.
 #### Scenario: View plugin details
 - **WHEN** user clicks on a plugin card
 - **THEN** a details panel shows metadata (author, description, version)
-
-### Requirement: Instance Identity
-The system SHALL generate and persist a unique instance ID on first run.
-
-#### Scenario: Generate instance ID
-- **WHEN** the server starts for the first time
-- **THEN** a UUID v4 is generated
-- **THEN** the instance ID is stored in the database settings table
-
-#### Scenario: Retrieve instance ID
-- **WHEN** the server starts subsequently
-- **THEN** the existing instance ID is loaded from the database
-
-#### Scenario: Expose instance ID to plugin
-- **WHEN** a plugin's init message is sent
-- **THEN** the message contains the instance ID
-
-### Requirement: Plugin Licensing
-The system SHALL support optional license validation where plugins can verify a license key against the instance ID.
-
-#### Scenario: License validation
-- **WHEN** a plugin's `init()` is called
-- **THEN** the plugin can validate a license key against the instance ID
-
-#### Scenario: License failure
-- **WHEN** license validation fails
-- **THEN** the plugin logs an error
-- **THEN** the plugin exits with a non-zero status
-
-#### Scenario: No license required
-- **WHEN** a plugin does not implement license checking
-- **THEN** the plugin loads normally (community plugins)
-
-#### Scenario: Proprietary plugin with valid license
-- **WHEN** a proprietary plugin has a valid license
-- **THEN** the plugin starts normally and functions
 
 ### Requirement: Plugin Key-Value Storage
 The system SHALL provide plugins with isolated key-value storage.

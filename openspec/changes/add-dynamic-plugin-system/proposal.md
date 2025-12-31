@@ -21,7 +21,6 @@ The previous WASM-based design was over-engineered for this use case. Process-is
 - **NEW API:** Plugin process spawning and supervision
 - **NEW API:** Unix domain socket communication with plugins
 - **NEW API:** Plugin routes registered dynamically
-- **NEW feature:** Instance-locked licensing (plugins tied to specific deployment)
 - **NEW feature:** Automatic plugin restart on failure
 - **NEW feature:** Structured logging for TORIS observability
 - **NEW UI:** Plugin Manager page (list, enable/disable plugins)
@@ -47,7 +46,6 @@ This proposal covers the MVP:
 - Local plugin loading from `./plugins/*.binary` directory
 - Process isolation with Unix domain sockets (microsecond overhead)
 - Single view per plugin (one sidebar entry, one route)
-- Instance-locked licensing (HMAC-signed keys)
 - JS bundle frontend (plugin has full control inside container)
 - Auto-restart on plugin crash with configurable backoff
 - Structured logging to `/var/log/toru/plugins/` for TORIS

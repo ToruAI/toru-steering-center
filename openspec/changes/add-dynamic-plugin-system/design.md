@@ -98,7 +98,6 @@ Toru Steering Center is an open source VPS control panel. The business model req
   "type": "lifecycle",
   "action": "init",
   "payload": {
-    "instance_id": "uuid",
     "plugin_socket": "/tmp/toru-plugins/my-plugin.sock",
     "log_path": "/var/log/toru/plugins/my-plugin.log"
   }
@@ -187,7 +186,6 @@ pub struct PluginMetadata {
 }
 
 pub struct PluginContext {
-    pub instance_id: String,
     pub config: PluginConfig,
     pub kv: Box<dyn PluginKvStore>,
 }
@@ -220,36 +218,7 @@ async fn main() {
 - Separate crate allows independent versioning
 - Async trait required for network I/O, DB calls
 
-### Decision 4: Instance-Locked Licensing
-
-**Choice:** HMAC-signed license keys tied to instance UUID
-
-**How it works:**
-1. On first run, Toru generates unique instance ID (UUID v4), stored in DB
-2. Client sends instance ID to maintainer
-3. Maintainer generates signed license key
-4. Plugin validates: key signature matches instance ID
-
-**Key format:**
-```
-base64(instance_id:expiry:hmac_signature)
-```
-
-Where:
-- `instance_id` - Must match current instance
-- `expiry` - "never" or ISO date (e.g., "2025-12-31")
-- `hmac_signature` - HMAC-SHA256(instance_id:expiry, SECRET_KEY)
-
-**Rationale:**
-- Works offline (no license server dependency)
-- True ownership (license works forever once issued)
-- Cannot be shared (tied to specific instance)
-- Simple implementation (~50 lines)
-
-**Alternative considered:**
-- Online license server - Contradicts "no vendor lock-in" goal
-
-### Decision 5: Frontend Mount API
+### Decision 4: Frontend Mount API
 
 **Choice:** JavaScript bundle with `mount(container, api)` contract
 
@@ -280,7 +249,7 @@ window.ToruPlugins["my-plugin"] = {
 - No framework lock-in
 - Frontend bundle embedded in binary via `include_bytes!`
 
-### Decision 6: Plugin Storage
+### Decision 5: Plugin Storage
 
 **Choice:** File-based plugin directory + SQLite metadata
 
@@ -295,9 +264,6 @@ window.ToruPlugins["my-plugin"] = {
 
 **Database additions:**
 ```sql
--- Instance identity
-INSERT INTO settings (key, value) VALUES ('instance_id', 'uuid-here');
-
 -- Plugin key-value storage (per-plugin namespace)
 CREATE TABLE plugin_kv (
     plugin_id TEXT NOT NULL,
@@ -323,7 +289,7 @@ CREATE TABLE plugin_events (
 - KV store for plugin settings/state
 - Events table for observability
 
-### Decision 7: Plugin Supervision
+### Decision 6: Plugin Supervision
 
 **Choice:** Core process monitors and restarts plugins
 
@@ -367,7 +333,7 @@ impl PluginSupervisor {
 }
 ```
 
-### Decision 8: Logging for TORIS
+### Decision 7: Logging for TORIS
 
 **Choice:** Structured JSON logs to file
 
@@ -405,7 +371,7 @@ impl PluginSupervisor {
 - Structured JSON = easy to parse and query
 - One file per plugin = simple isolation
 
-### Decision 9: Plugin Lifecycle
+### Decision 8: Plugin Lifecycle
 
 **States:**
 ```
@@ -442,7 +408,6 @@ impl PluginSupervisor {
 | Plugin socket path conflicts | Low | Use plugin_id in path, clean on startup |
 | Plugin consumes too much memory | Medium | Monitor via TORIS, manually restart server |
 | Plugin restart loop | Medium | Disable after N failures, notify maintainer |
-| License key leaked | Medium | Keys are instance-specific, useless elsewhere |
 | Protocol changes break old plugins | Low | Version protocol in message, document breaking changes |
 
 ## Migration Plan
@@ -455,13 +420,12 @@ Since this replaces the previous WASM-based design (never deployed):
 **Phases:**
 1. **Phase 1:** Plugin protocol + toru-plugin-api crate (Rust SDK)
 2. **Phase 2:** Plugin supervisor + process management
-3. **Phase 3:** Instance ID + licensing
-4. **Phase 4:** Unix socket communication
+3. **Phase 3:** Plugin KV storage
+4. **Phase 4:** Plugin API routes
 5. **Phase 5:** Frontend plugin container
 6. **Phase 6:** Plugin Manager UI
 7. **Phase 7:** Observability (logging, events)
 8. **Phase 8:** Rust plugin example + Python plugin example
-9. **Phase 9:** Documentation
 
 ## Open Questions
 
