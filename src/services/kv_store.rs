@@ -5,12 +5,15 @@ use toru_plugin_api::{PluginError, PluginResult};
 ///
 /// Each plugin gets its own isolated namespace in the plugin_kv table.
 /// This implements the PluginKvStore trait from toru-plugin-api.
+// TODO: Integrate KV store into plugin API when plugins need persistent storage
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct SqliteKvStore {
     pool: DbPool,
     plugin_id: String,
 }
 
+#[allow(dead_code)]
 impl SqliteKvStore {
     /// Create a new SqliteKvStore for a specific plugin
     ///

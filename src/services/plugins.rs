@@ -29,10 +29,12 @@ pub struct PluginProcess {
 #[derive(Debug)]
 pub struct PluginSupervisor {
     plugins: HashMap<String, PluginProcess>,
+    // Used for tracking crash recovery and exponential backoff
     restart_counts: HashMap<String, u32>,
     plugins_dir: PathBuf,
     metadata_dir: PathBuf,
     sockets_dir: PathBuf,
+    // Used to determine when to disable plugins after repeated crashes
     max_restarts: u32,
     instance_id: String,
     plugin_logger: Arc<PluginLogger>,
@@ -191,7 +193,7 @@ impl PluginSupervisor {
         if !metadata.route.starts_with('/') || metadata.route.contains("..") {
             return Err(anyhow::anyhow!("Invalid plugin route"));
         }
-        if metadata.name.len() > 100 || metadata.author.as_ref().map_or(false, |a| a.len() > 100) {
+        if metadata.name.len() > 100 || metadata.author.as_ref().is_some_and(|a| a.len() > 100) {
             return Err(anyhow::anyhow!("Metadata field too long"));
         }
 
@@ -251,7 +253,7 @@ impl PluginSupervisor {
                                 // Write plain text as Info log
                                 let log_entry = crate::services::logging::LogEntry::new(
                                     crate::services::logging::LogLevel::Info,
-                                    &output.trim()
+                                    output.trim()
                                 ).with_plugin(&plugin_id_clone);
                                 let _ = plugin_logger.log_plugin(log_entry).await;
                             }
@@ -347,6 +349,8 @@ impl PluginSupervisor {
     ///
     /// # Returns
     /// true if healthy, false otherwise
+    // TODO: Integrate in health check endpoints and monitoring
+    #[allow(dead_code)]
     pub fn check_plugin_health(&self, plugin_id: &str) -> bool {
         let process = match self.plugins.get(plugin_id) {
             Some(p) => p,
@@ -451,6 +455,8 @@ impl PluginSupervisor {
     ///
     /// # Returns
     /// Current restart count
+    // Used in restart_plugin_with_backoff
+    #[allow(dead_code)]
     pub fn increment_restart_count(&mut self, plugin_id: &str) -> u32 {
         let count = self
             .restart_counts
@@ -464,6 +470,8 @@ impl PluginSupervisor {
     ///
     /// # Arguments
     /// * `plugin_id` - Plugin identifier
+    // Used in tests and should_disable_plugin
+    #[allow(dead_code)]
     pub fn get_restart_count(&self, plugin_id: &str) -> u32 {
         *self.restart_counts.get(plugin_id).unwrap_or(&0)
     }
@@ -475,6 +483,8 @@ impl PluginSupervisor {
     ///
     /// # Returns
     /// true if should be disabled
+    // Used in restart_plugin_with_backoff
+    #[allow(dead_code)]
     pub fn should_disable_plugin(&self, plugin_id: &str) -> bool {
         self.get_restart_count(plugin_id) >= self.max_restarts
     }
@@ -483,6 +493,8 @@ impl PluginSupervisor {
     ///
     /// # Arguments
     /// * `plugin_id` - Plugin identifier
+    // Used in tests and will be needed for crash recovery reset
+    #[allow(dead_code)]
     pub fn reset_restart_count(&mut self, plugin_id: &str) {
         self.restart_counts.remove(plugin_id);
     }
@@ -560,8 +572,8 @@ impl PluginSupervisor {
                 // Get binary path from plugins directory
                 let binary_path = self.plugins_dir.join(format!("{}.binary", plugin_id));
                 if let Some(metadata) = process.metadata.clone() {
-                    // Spawn the plugin
-                    drop(process); // Release lock before spawning
+                    // Spawn the plugin (process reference is dropped automatically at end of scope)
+                    let _ = process; // Explicitly indicate we're done with the mutable borrow
                     self.spawn_plugin(plugin_id, &binary_path, metadata).await?;
                 } else {
                     process.enabled = true;
@@ -693,6 +705,8 @@ impl PluginSupervisor {
     ///
     /// # Arguments
     /// * `plugin_id` - Plugin identifier
+    // TODO: Integrate in graceful shutdown flow
+    #[allow(dead_code)]
     async fn send_shutdown_message(&self, plugin_id: &str) -> Result<()> {
         let process = self
             .get_plugin_status(plugin_id)
@@ -861,6 +875,8 @@ impl PluginSupervisor {
     /// * `plugin_id` - Plugin identifier to restart
     /// * `binary_path` - Path to plugin binary
     /// * `metadata` - Plugin metadata
+    // TODO: Integrate in crash monitoring and auto-recovery system
+    #[allow(dead_code)]
     pub async fn restart_plugin_with_backoff(
         &mut self,
         plugin_id: &str,

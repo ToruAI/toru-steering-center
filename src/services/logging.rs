@@ -19,7 +19,7 @@ pub enum LogLevel {
 
 impl LogLevel {
     /// Convert string to LogLevel
-    pub fn from_str(level: &str) -> Option<Self> {
+    pub fn parse_level(level: &str) -> Option<Self> {
         match level.to_lowercase().as_str() {
             "trace" => Some(LogLevel::Trace),
             "debug" => Some(LogLevel::Debug),
@@ -76,12 +76,16 @@ impl LogEntry {
     }
 
     /// Set error details for the log entry
+    // TODO: Integrate in crash recovery logging
+    #[allow(dead_code)]
     pub fn with_error(mut self, error: &str) -> Self {
         self.error = Some(error.to_string());
         self
     }
 
     /// Set PID for the log entry
+    // TODO: Integrate in process monitoring
+    #[allow(dead_code)]
     pub fn with_pid(mut self, pid: u32) -> Self {
         self.pid = Some(pid);
         self
@@ -119,6 +123,8 @@ impl Default for LogConfig {
 pub struct PluginLogger {
     config: LogConfig,
     // Per-plugin log files: HashMap<plugin_id, log_file_path>
+    // TODO: Integrate file handle caching for improved performance
+    #[allow(dead_code)]
     log_files: Arc<Mutex<std::collections::HashMap<String, PathBuf>>>,
 }
 
@@ -139,11 +145,15 @@ impl PluginLogger {
     }
 
     /// Initialize logger with default config
-    pub fn default() -> Result<Self> {
+    // TODO: Use in alternative initialization paths
+    #[allow(dead_code)]
+    pub fn with_default_config() -> Result<Self> {
         Self::new(LogConfig::default())
     }
 
     /// Create logger from custom log directory
+    // TODO: Use in alternative initialization paths
+    #[allow(dead_code)]
     pub fn from_directory<P: AsRef<Path>>(log_dir: P) -> Result<Self> {
         let config = LogConfig {
             log_dir: log_dir.as_ref().to_path_buf(),
@@ -212,7 +222,7 @@ impl PluginLogger {
         if let Some(level) = filter_level {
             let min_severity = level.severity();
             logs.retain(|entry| {
-                if let Some(entry_level) = LogLevel::from_str(&entry.level) {
+                if let Some(entry_level) = LogLevel::parse_level(&entry.level) {
                     entry_level.severity() >= min_severity
                 } else {
                     false
@@ -340,6 +350,8 @@ impl SupervisorLogger {
     }
 
     /// Log a message
+    // TODO: Integrate in general supervisor logging
+    #[allow(dead_code)]
     pub async fn log(&self, level: LogLevel, message: &str) -> Result<()> {
         let entry = LogEntry::new(level, message);
         let json = entry.to_json()?;
@@ -351,6 +363,8 @@ impl SupervisorLogger {
     }
 
     /// Log error with details
+    // TODO: Integrate in error handling paths
+    #[allow(dead_code)]
     pub async fn log_error(&self, message: &str, error: &str) -> Result<()> {
         let entry = LogEntry::new(LogLevel::Error, message).with_error(error);
         let json = entry.to_json()?;
@@ -409,9 +423,9 @@ mod tests {
     }
 
     #[test]
-    fn test_log_level_from_str() {
-        assert_eq!(LogLevel::from_str("info"), Some(LogLevel::Info));
-        assert_eq!(LogLevel::from_str("ERROR"), Some(LogLevel::Error));
-        assert_eq!(LogLevel::from_str("invalid"), None);
+    fn test_log_level_parse_level() {
+        assert_eq!(LogLevel::parse_level("info"), Some(LogLevel::Info));
+        assert_eq!(LogLevel::parse_level("ERROR"), Some(LogLevel::Error));
+        assert_eq!(LogLevel::parse_level("invalid"), None);
     }
 }

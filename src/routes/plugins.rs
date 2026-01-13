@@ -381,7 +381,7 @@ async fn get_plugin_logs(
     let plugin_logger = supervisor.plugin_logger();
 
     // Parse log level filter
-    let filter_level = query.level.as_ref().and_then(|l| LogLevel::from_str(l));
+    let filter_level = query.level.as_ref().and_then(|l| LogLevel::parse_level(l));
 
     // Read logs with pagination and filtering
     let logs = plugin_logger
