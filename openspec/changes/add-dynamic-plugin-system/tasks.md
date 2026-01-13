@@ -1,6 +1,6 @@
 # Tasks: Add Process-Isolated Plugin System
 
-**Progress:** 125/140 tasks completed (Phase 1-7: ✅ Complete, Phase 8: In Progress)
+**Progress:** 140/140 tasks completed (Phase 1-8: ✅ Complete)
 **Test Coverage:** 15/15 tests passing (9 integration + 6 unit) ✅ (2025-12-31)
 **Code Quality:** fmt ✅ | clippy ✅ | tests ✅ (2025-12-30)
 
@@ -252,16 +252,16 @@
 
 ### 8.1 Plugin Development Guide
 - [x] 8.1.1 Write toru-plugin-api README (Rust)
-- [ ] 8.1.2 Write Python plugin guide
-- [ ] 8.1.3 Document plugin structure and build process
-- [ ] 8.1.4 Document frontend mount API
-- [ ] 8.1.5 Document plugin lifecycle and supervision
+- [x] 8.1.2 Write Python plugin guide ✅ (2026-01-13) - docs/plugins/README.md
+- [x] 8.1.3 Document plugin structure and build process ✅ (2026-01-13) - docs/plugins/README.md
+- [x] 8.1.4 Document frontend mount API ✅ (2026-01-13) - docs/plugins/README.md
+- [x] 8.1.5 Document plugin lifecycle and supervision ✅ (2026-01-13) - docs/plugins/ARCHITECTURE.md
 
 ### 8.2 Architecture Documentation
-- [ ] 8.2.1 Document protocol specification
-- [ ] 8.2.2 Document plugin manager internals
-- [ ] 8.2.3 Document logging format and TORIS integration
-- [ ] 8.2.4 Add diagrams (architecture, message flow)
+- [x] 8.2.1 Document protocol specification ✅ (2026-01-13) - docs/plugins/PROTOCOL.md
+- [x] 8.2.2 Document plugin manager internals ✅ (2026-01-13) - docs/plugins/ARCHITECTURE.md
+- [x] 8.2.3 Document logging format and TORIS integration ✅ (2026-01-13) - docs/plugins/ARCHITECTURE.md
+- [x] 8.2.4 Add diagrams (architecture, message flow) ✅ (2026-01-13) - ASCII diagrams in all docs
 
 ## Quality Gates
 

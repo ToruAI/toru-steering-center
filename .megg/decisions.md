@@ -1,6 +1,6 @@
 ---
 created: 2025-12-30T13:56:45.272Z
-updated: 2026-01-13T17:57:45.843Z
+updated: 2026-01-13T19:15:16.357Z
 type: memory
 ---
 ## 2025-12-30T13:52:00.000Z
@@ -261,3 +261,53 @@ Phase 8 (Documentation) was initially deleted in error, then restored. Critical 
 - `/src/services/plugins.rs` - 7 methods/fields marked, 1 bug fixed
 
 **Reversible:** Yes - Remove `#[allow(dead_code)]` as features get integrated
+
+## 2026-01-13T19:15:16.357Z
+## 2026-01-13 - Created Comprehensive Plugin System Documentation
+
+**Context:** The plugin system has been implemented but lacked comprehensive documentation for developers building plugins and for AI agents understanding the system architecture.
+
+**Decision:** Created three-tier documentation structure:
+1. `docs/plugins/README.md` - User-facing guide for plugin developers (1,043 lines)
+2. `docs/plugins/PROTOCOL.md` - Complete protocol specification (708 lines)
+3. `docs/plugins/ARCHITECTURE.md` - Deep technical architecture (727 lines)
+
+**Content Highlights:**
+
+**README.md:**
+- Quick start examples (Rust and Python in 5 minutes)
+- Complete plugin implementation guides
+- Frontend development with mount/unmount API
+- Deployment instructions
+- Troubleshooting section
+
+**PROTOCOL.md:**
+- Wire format specification (4-byte length prefix + JSON)
+- All message types with examples (Lifecycle, HTTP, KV)
+- Request-response flow documentation
+- Error handling patterns
+- Performance characteristics
+
+**ARCHITECTURE.md:**
+- System component diagram
+- Data flow visualization
+- Plugin supervisor internals
+- Process management details
+- Security model and trust boundaries
+- Extension points for future development
+- Observability and TORIS integration
+
+**Reasoning:** 
+- Documentation is critical for ecosystem growth
+- AI agents need structured documentation to assist users
+- Human developers need clear examples and reference material
+- PROTOCOL.md enables third-party implementations in any language
+- ARCHITECTURE.md helps maintainers and contributors understand system design
+
+**Accuracy:** All examples verified against current implementation in:
+- `toru-plugin-api/src/`
+- `examples/hello-plugin-rust/`
+- `examples/hello-plugin-python/`
+- `openspec/changes/add-dynamic-plugin-system/design.md`
+
+**Total:** 2,478 lines of comprehensive documentation
