@@ -35,7 +35,10 @@ impl From<&PluginProcess> for PluginStatus {
     fn from(process: &PluginProcess) -> Self {
         let health = if !process.enabled {
             "disabled".to_string()
-        } else if process.process.is_some() && !process.socket_path.is_empty() && PathBuf::from(&process.socket_path).exists() {
+        } else if process.process.is_some()
+            && !process.socket_path.is_empty()
+            && PathBuf::from(&process.socket_path).exists()
+        {
             "healthy".to_string()
         } else {
             "unhealthy".to_string()

@@ -187,7 +187,11 @@ impl PluginSupervisor {
             serde_json::from_str(&stdout).context("Failed to parse plugin metadata JSON")?;
 
         // Security: Validate metadata fields to prevent injection attacks
-        if !metadata.id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
+        if !metadata
+            .id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-')
+        {
             return Err(anyhow::anyhow!("Invalid plugin ID format"));
         }
         if !metadata.route.starts_with('/') || metadata.route.contains("..") {
@@ -247,14 +251,17 @@ impl PluginSupervisor {
                         Ok(n) => {
                             let output = String::from_utf8_lossy(&buffer[..n]).to_string();
                             // Parse structured JSON logs or write as plain text
-                            if let Ok(log_entry) = serde_json::from_str::<crate::services::logging::LogEntry>(&output) {
+                            if let Ok(log_entry) =
+                                serde_json::from_str::<crate::services::logging::LogEntry>(&output)
+                            {
                                 let _ = plugin_logger.log_plugin(log_entry).await;
                             } else {
                                 // Write plain text as Info log
                                 let log_entry = crate::services::logging::LogEntry::new(
                                     crate::services::logging::LogLevel::Info,
-                                    output.trim()
-                                ).with_plugin(&plugin_id_clone);
+                                    output.trim(),
+                                )
+                                .with_plugin(&plugin_id_clone);
                                 let _ = plugin_logger.log_plugin(log_entry).await;
                             }
                         }
@@ -585,7 +592,8 @@ impl PluginSupervisor {
             // Plugin not in memory, need to discover and spawn it
             let discovered = self.scan_plugins_directory().await?;
             if let Some((binary_path, metadata)) = discovered.get(plugin_id) {
-                self.spawn_plugin(plugin_id, binary_path, metadata.clone()).await?;
+                self.spawn_plugin(plugin_id, binary_path, metadata.clone())
+                    .await?;
             }
         }
 
@@ -796,7 +804,7 @@ impl PluginSupervisor {
         // Read the response with timeout to prevent hanging on unresponsive plugins
         let response_msg = tokio::time::timeout(
             tokio::time::Duration::from_secs(30),
-            protocol.read_message(&mut stream)
+            protocol.read_message(&mut stream),
         )
         .await
         .map_err(|_| anyhow::anyhow!("Plugin response timeout after 30s"))?

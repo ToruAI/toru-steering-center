@@ -30,7 +30,7 @@ async fn create_test_supervisor(temp_dir: &TempDir) -> PluginSupervisor {
 
     PluginSupervisor::new(
         &plugins_dir,
-        10,                      // max_restarts
+        10, // max_restarts
         "test-instance-id".to_string(),
         &log_dir,
         db_pool,
@@ -271,7 +271,9 @@ async fn test_t4_metadata_failure_handled_gracefully() {
     );
 
     // System should still be running
-    println!("✅ T4: Plugin with --metadata failure handled gracefully via scan_plugins_directory()");
+    println!(
+        "✅ T4: Plugin with --metadata failure handled gracefully via scan_plugins_directory()"
+    );
 }
 
 // ============ T5-T8: Instance Identity Tests (already good as unit tests) ============
@@ -418,7 +420,10 @@ async fn test_t12_enable_plugin_spawns_process_and_makes_routes_available() {
     assert!(status.pid.is_some(), "Plugin should have PID");
 
     // Verify route is registered
-    let metadata = status.metadata.as_ref().expect("Plugin should have metadata");
+    let metadata = status
+        .metadata
+        .as_ref()
+        .expect("Plugin should have metadata");
     assert_eq!(
         metadata.route, "/hello-rust",
         "Plugin route should be /hello-rust (from metadata)"
@@ -475,10 +480,7 @@ async fn test_t13_disable_plugin_kills_process_and_returns_404() {
     if let Some(plugin_id) = resolved_plugin {
         // Plugin still exists in memory but should not be healthy since it's disabled
         let is_healthy = supervisor.check_plugin_health(&plugin_id);
-        assert!(
-            !is_healthy,
-            "Disabled plugin should not be healthy"
-        );
+        assert!(!is_healthy, "Disabled plugin should not be healthy");
     }
     // Either route doesn't resolve or plugin is not healthy - both are acceptable
 
@@ -581,7 +583,9 @@ async fn test_t15_plugin_crash_triggers_restart_with_backoff() {
         "Restart count should reset"
     );
 
-    println!("✅ T15: Plugin crash triggers restart with backoff via restart_plugin_with_backoff()");
+    println!(
+        "✅ T15: Plugin crash triggers restart with backoff via restart_plugin_with_backoff()"
+    );
 }
 
 // ============ T18-T19: KV/Socket Tests ============
@@ -680,7 +684,8 @@ async fn test_t23_plugin_events_written_to_database() {
             details TEXT
         )",
         [],
-    ).expect("Failed to create table");
+    )
+    .expect("Failed to create table");
 
     let db_pool = Arc::new(Mutex::new(conn));
 
@@ -705,7 +710,10 @@ async fn test_t23_plugin_events_written_to_database() {
 
     // Verify events were written (IDs should increment)
     assert!(event_id_1 > 0, "Event ID 1 should be positive");
-    assert!(event_id_2 > event_id_1, "Event ID 2 should be greater than ID 1");
+    assert!(
+        event_id_2 > event_id_1,
+        "Event ID 2 should be greater than ID 1"
+    );
 
     // Retrieve events from database
     let events = db::plugin_event_get_recent(&db_pool, "test-plugin", 10)
@@ -713,8 +721,14 @@ async fn test_t23_plugin_events_written_to_database() {
         .expect("Failed to get recent events");
 
     assert_eq!(events.len(), 2, "Should have 2 events");
-    assert_eq!(events[0].event_type, "stopped", "Most recent event should be 'stopped'");
-    assert_eq!(events[1].event_type, "started", "Second event should be 'started'");
+    assert_eq!(
+        events[0].event_type, "stopped",
+        "Most recent event should be 'stopped'"
+    );
+    assert_eq!(
+        events[1].event_type, "started",
+        "Second event should be 'started'"
+    );
 
     println!("✅ T23: Plugin events written to database via notify_plugin_event()");
 }
