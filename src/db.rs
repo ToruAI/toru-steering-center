@@ -686,7 +686,6 @@ pub async fn cleanup_old_login_attempts(pool: &DbPool) -> Result<()> {
 // ============ Plugin KV functions ============
 
 /// Get a value from plugin KV storage
-#[allow(dead_code)] // Used by plugins, not yet integrated (Phase 5+)
 pub async fn plugin_kv_get(pool: &DbPool, plugin_id: &str, key: &str) -> Result<Option<String>> {
     let conn = pool.lock().await;
     let mut stmt = conn.prepare("SELECT value FROM plugin_kv WHERE plugin_id = ?1 AND key = ?2")?;
@@ -697,7 +696,6 @@ pub async fn plugin_kv_get(pool: &DbPool, plugin_id: &str, key: &str) -> Result<
 }
 
 /// Set a value in plugin KV storage
-#[allow(dead_code)] // Used by plugins, not yet integrated (Phase 5+)
 pub async fn plugin_kv_set(pool: &DbPool, plugin_id: &str, key: &str, value: &str) -> Result<()> {
     let conn = pool.lock().await;
     conn.execute(
@@ -708,7 +706,6 @@ pub async fn plugin_kv_set(pool: &DbPool, plugin_id: &str, key: &str, value: &st
 }
 
 /// Delete a value from plugin KV storage
-#[allow(dead_code)] // Used by plugins, not yet integrated (Phase 5+)
 pub async fn plugin_kv_delete(pool: &DbPool, plugin_id: &str, key: &str) -> Result<()> {
     let conn = pool.lock().await;
     conn.execute(
@@ -742,7 +739,6 @@ pub async fn plugin_kv_get_all(pool: &DbPool, plugin_id: &str) -> Result<Vec<Plu
 // ============ Plugin Event functions ============
 
 /// Log a plugin event
-#[allow(dead_code)] // Used by plugins, not yet integrated (Phase 5+)
 pub async fn plugin_event_log(
     pool: &DbPool,
     plugin_id: &str,
