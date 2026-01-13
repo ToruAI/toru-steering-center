@@ -320,6 +320,11 @@ async fn get_plugin_bundle(
     State(state): State<AppState>,
     Path(id): Path<String>,
 ) -> Result<impl IntoResponse, StatusCode> {
+    // Security: Validate plugin ID to prevent path traversal attacks
+    if id.contains("..") || id.contains('/') || id.contains('\\') {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
     let supervisor = state
         .supervisor
         .as_ref()

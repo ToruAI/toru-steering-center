@@ -137,6 +137,31 @@ impl PluginSupervisor {
                 continue;
             }
 
+            // Security: Resolve symlinks and verify path is still within plugins_dir
+            let canonical_path = match path.canonicalize() {
+                Ok(p) => p,
+                Err(e) => {
+                    warn!("Failed to canonicalize plugin path {:?}: {}", path, e);
+                    continue;
+                }
+            };
+
+            let canonical_plugins_dir = match self.plugins_dir.canonicalize() {
+                Ok(p) => p,
+                Err(e) => {
+                    error!("Failed to canonicalize plugins directory: {}", e);
+                    return Ok(discovered);
+                }
+            };
+
+            if !canonical_path.starts_with(&canonical_plugins_dir) {
+                warn!(
+                    "Plugin {:?} resolves outside plugins directory (symlink attack?), skipping",
+                    path
+                );
+                continue;
+            }
+
             // Read plugin metadata
             match self.read_plugin_metadata(&path).await {
                 Ok(metadata) => {

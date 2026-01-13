@@ -1,6 +1,9 @@
 use crate::{error::PluginResult, types::Message};
 use tokio::net::UnixStream;
 
+/// Maximum message size to prevent memory exhaustion attacks (16 MB)
+const MAX_MESSAGE_SIZE: usize = 16 * 1024 * 1024;
+
 pub struct PluginProtocol;
 
 impl PluginProtocol {
@@ -17,6 +20,15 @@ impl PluginProtocol {
         reader.read_exact(&mut length_buf).await?;
 
         let length = u32::from_be_bytes(length_buf) as usize;
+
+        // Security: Prevent memory exhaustion from malicious length values
+        if length > MAX_MESSAGE_SIZE {
+            return Err(crate::error::PluginError::Protocol(format!(
+                "Message size {} exceeds maximum allowed size {}",
+                length, MAX_MESSAGE_SIZE
+            )));
+        }
+
         let mut msg_buf = vec![0u8; length];
 
         reader.read_exact(&mut msg_buf).await?;
