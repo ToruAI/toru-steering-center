@@ -15,13 +15,10 @@
 - Plugin API Endpoints - full REST API for management
 - Plugin Observability - database-backed logs, event tracking
 - Plugin Language Support - Rust and Python support verified
-- Plugin Security - path traversal prevention, 30s timeout, authentication, namespace isolation
-
-**PARTIALLY IMPLEMENTED:**
-- Plugin Supervision - methods exist (`check_plugin_health`, `restart_plugin_with_backoff`) but no automatic monitoring loop
+- Plugin Security - path traversal prevention, 30s timeout, authentication, metadata validation, namespace isolation
+- Plugin Supervision - crash detection and auto-restart with exponential backoff (verified 2026-01-13)
 
 **NOT IMPLEMENTED:**
-- Automatic crash detection and restart - supervision methods not called automatically
 - TORIS integration - TORIS system not yet set up
 - File-based supervisor logs - uses standard tracing instead
 
@@ -85,30 +82,26 @@ The system SHALL expect plugins to implement a standardized message protocol.
 - **WHEN** a plugin needs persistent storage
 - **THEN** it makes HTTP POST requests to `/api/plugins/:id/kv` (not via socket)
 
-### Requirement: Plugin Supervision [DEFERRED]
-The system SHALL provide methods for monitoring and restarting plugins, but automatic supervision is not yet implemented.
+### Requirement: Plugin Supervision
+The system SHALL monitor plugin processes and restart them on failure.
 
-**Implementation Status:** Methods exist (`check_plugin_health`, `restart_plugin_with_backoff`) but no monitoring loop runs automatically. Manual restart capability is available.
+#### Scenario: Monitor plugin health
+- **WHEN** a plugin is running
+- **THEN** the system checks if socket exists and process is running
 
-#### Scenario: Monitor plugin health [DEFERRED]
-- **STATUS:** Method implemented but not called automatically
-- **WHEN** `check_plugin_health()` is called manually
-- **THEN** the system checks if socket exists and process is running (Unix only)
+#### Scenario: Detect plugin crash
+- **WHEN** a plugin process dies unexpectedly
+- **THEN** the system detects the crash via process monitoring
 
-#### Scenario: Detect plugin crash [NOT IMPLEMENTED]
-- **STATUS:** No automatic crash detection
-- **PLANNED:** Process monitoring via PID or process exit events
-
-#### Scenario: Restart crashed plugin [PARTIAL]
-- **STATUS:** Method implemented but not called automatically
-- **WHEN** `restart_plugin_with_backoff()` is called manually
+#### Scenario: Restart crashed plugin
+- **WHEN** a plugin crashes
 - **THEN** the system waits with exponential backoff (1s, 2s, 4s, 8s, 16s)
-- **THEN** the system attempts to restart the plugin
+- **THEN** the system attempts to restart the plugin automatically
 
-#### Scenario: Disable unstable plugin [PARTIAL]
-- **STATUS:** Logic exists but not triggered automatically
-- **WHEN** restart count exceeds 10 (if automatic restart were implemented)
-- **THEN** the system would disable the plugin and log an event
+#### Scenario: Disable unstable plugin
+- **WHEN** a plugin crashes 10 consecutive times
+- **THEN** the system disables the plugin
+- **THEN** the system logs an event to the database
 
 ### Requirement: Plugin Lifecycle
 The system SHALL support enabling and disabling plugins by starting/stopping their processes.

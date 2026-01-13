@@ -312,18 +312,18 @@ Request AI code review after:
 
 ## Validation (Manual Smoke Tests)
 
-- [ ] V.1 Build and load Rust example plugin
-- [ ] V.2 Build and load Python example plugin
-- [ ] V.3 Enable/disable plugin via UI
-- [ ] V.4 Plugin view renders and responds to clicks
-- [ ] V.5 Plugin KV storage works
-- [ ] V.6 Plugin appears in sidebar when enabled
-- [ ] V.7 Plugin hidden from sidebar when disabled
-- [ ] V.8 Server starts with no plugins (empty directory)
-- [ ] V.9 Server handles invalid .binary files gracefully
-- [ ] V.10 Plugin crash triggers auto-restart
-- [ ] V.11 Plugin logs visible in UI
-- [ ] V.12 TORIS can read plugin logs
+- [x] V.1 Build and load Rust example plugin ✅ (2026-01-13)
+- [x] V.2 Build and load Python example plugin ✅ (2026-01-13)
+- [x] V.3 Enable/disable plugin via UI ✅ (2026-01-13)
+- [x] V.4 Plugin view renders and responds to clicks ✅ (2026-01-13)
+- [x] V.5 Plugin KV storage works ✅ (2026-01-13)
+- [x] V.6 Plugin appears in sidebar when enabled ✅ (2026-01-13)
+- [x] V.7 Plugin hidden from sidebar when disabled ✅ (2026-01-13)
+- [x] V.8 Server starts with no plugins (empty directory) ✅ (2026-01-13)
+- [x] V.9 Server handles invalid .binary files gracefully ✅ (2026-01-13)
+- [x] V.10 Plugin crash triggers auto-restart ✅ (2026-01-13)
+- [x] V.11 Plugin logs visible in UI ✅ (2026-01-13)
+- [ ] V.12 TORIS can read plugin logs - N/A (TORIS not configured)
 
 ## Dependencies
 

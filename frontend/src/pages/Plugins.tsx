@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import type { Plugin, PluginLogEntry } from '../lib/api';
-import { Plug2, Loader2, X, FileText } from 'lucide-react';
+import { Plug2, Loader2, FileText } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -201,19 +201,12 @@ export function Plugins() {
       <Dialog open={!!selectedPlugin} onOpenChange={(open) => !open && setSelectedPlugin(null)}>
         <DialogContent className="max-w-3xl max-h-[80vh]">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle>
-                  {selectedPlugin?.name} - Logs
-                </DialogTitle>
-                <DialogDescription>
-                  {selectedPlugin?.id}
-                </DialogDescription>
-              </div>
-              <Button variant="ghost" size="icon" onClick={() => setSelectedPlugin(null)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            <DialogTitle>
+              {selectedPlugin?.name} - Logs
+            </DialogTitle>
+            <DialogDescription>
+              {selectedPlugin?.id}
+            </DialogDescription>
           </DialogHeader>
           <Separator />
           <div className="h-[400px]">
