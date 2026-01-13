@@ -1,6 +1,6 @@
 ---
 created: 2025-12-30T15:33:10.677Z
-updated: 2025-12-30T15:33:10.677Z
+updated: 2026-01-13T17:29:40.117Z
 type: memory
 ---
 # Phase 7 Logging & Observability - Key Decisions
@@ -103,3 +103,51 @@ type: memory
 1. **Log shipping to external services**: Not implemented; can be added later via TORIS
 2. **Database event logging (T23)**: Blocked on supervisor integration with AppState; will be added in Phase 5 integration
 3. **Compressed log rotation**: Not implemented; plain JSON is fine for 10MB files
+
+
+## 2026-01-13T17:18:01.275Z
+## 2026-01-13 - Validation Plan Created
+
+**Context:** Plugin system implementation (Phase 1-7) complete. Need to validate before merge.
+
+**Analysis Performed:**
+- All 23 tests passing (8 unit + 15 integration)
+- Both example plugins (Rust, Python) built and functional
+- Backend and frontend builds succeed
+- Plugin config shows both plugins enabled
+
+**Key Findings:**
+1. V.1-V.11 can be validated manually by running server
+2. V.8, V.9 already covered by automated tests (T2, T3, T4)
+3. V.12 (TORIS integration) blocked - requires TORIS setup
+
+**Validation Plan:** Written to `/validation-plan-plugin-system.md`
+
+**Technical Notes:**
+- 10 compiler warnings (non-critical, mostly unused methods)
+- One `drop(process)` warning should be fixed
+- Log directory `/var/log/toru/` may need elevated permissions
+
+**Decision:** Proceed with manual validation of V.1-V.11 before merge. V.12 deferred until TORIS is configured.
+
+## 2026-01-13T17:29:40.117Z
+## 2026-01-13 - Execution Plan Created for Final Push
+
+**Context:** Code review identified 4 critical issues (security + reliability). Integration tests use mocks instead of actual PluginSupervisor. Dead code warnings in build.
+
+**Decision:** Created sequenced execution plan with 5 phases:
+1. **Phase 1: Security Fixes** (2h) - Path traversal, metadata injection, timeout, EOF fix
+2. **Phase 2: Test Rewrite** (3h) - Replace mock tests with real PluginSupervisor integration
+3. **Phase 3: Dead Code Cleanup** (1h) - Integrate unused methods or remove
+4. **Phase 4: Build Gate** (0.5h) - Verify clean build
+5. **Phase 5: Manual Validation** (1.5h) - V.1-V.11 tests
+
+**Key Insights:**
+- Tests currently pass but don't test actual code (shell script mocks)
+- Security issues are fixable in ~2h, don't require redesign
+- Dead code is mostly crash recovery methods that need integration
+- TORIS integration (V.12) explicitly deferred
+
+**Plan Location:** `/execution-plan-plugin-system.md`
+
+**Next Action:** Execute Phase 1 security fixes (BOB)
