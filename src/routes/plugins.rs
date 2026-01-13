@@ -119,6 +119,11 @@ async fn forward_to_plugin(
     // Split path into route name and remaining path
     let (plugin_route, remaining) = path.split_once('/').unwrap_or((&path, ""));
 
+    // Security: Validate plugin_route to prevent path traversal attacks
+    if plugin_route.contains("..") || plugin_route.contains('/') {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
     // Check if this path matches an enabled plugin's route
     let supervisor = state
         .supervisor

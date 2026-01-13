@@ -184,6 +184,17 @@ impl PluginSupervisor {
         let metadata: PluginMetadata =
             serde_json::from_str(&stdout).context("Failed to parse plugin metadata JSON")?;
 
+        // Security: Validate metadata fields to prevent injection attacks
+        if !metadata.id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
+            return Err(anyhow::anyhow!("Invalid plugin ID format"));
+        }
+        if !metadata.route.starts_with('/') || metadata.route.contains("..") {
+            return Err(anyhow::anyhow!("Invalid plugin route"));
+        }
+        if metadata.name.len() > 100 || metadata.author.as_ref().map_or(false, |a| a.len() > 100) {
+            return Err(anyhow::anyhow!("Metadata field too long"));
+        }
+
         Ok(metadata)
     }
 
@@ -245,7 +256,6 @@ impl PluginSupervisor {
                                 let _ = plugin_logger.log_plugin(log_entry).await;
                             }
                         }
-                        Ok(0) => break, // EOF
                         Err(_) => break, // Error
                     }
                 }
@@ -769,11 +779,14 @@ impl PluginSupervisor {
             .await
             .context("Failed to send HTTP request to plugin")?;
 
-        // Read the response
-        let response_msg = protocol
-            .read_message(&mut stream)
-            .await
-            .context("Failed to read HTTP response from plugin")?;
+        // Read the response with timeout to prevent hanging on unresponsive plugins
+        let response_msg = tokio::time::timeout(
+            tokio::time::Duration::from_secs(30),
+            protocol.read_message(&mut stream)
+        )
+        .await
+        .map_err(|_| anyhow::anyhow!("Plugin response timeout after 30s"))?
+        .context("Failed to read HTTP response from plugin")?;
 
         // Extract the HTTP response - parse JSON to get status/headers/body
         let response_value =
