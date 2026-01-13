@@ -1,5 +1,30 @@
 # plugins Capability
 
+## Implementation Status Summary
+
+**FULLY IMPLEMENTED:**
+- Plugin Process Isolation - separate processes with crash isolation
+- Plugin Protocol - Unix sockets with JSON message protocol
+- Plugin API Contract - metadata command, socket listening, HTTP request handling
+- Plugin Lifecycle - enable/disable with state persistence
+- Plugin Routes - `/api/plugins/route/<plugin-route>/*` routing with path forwarding
+- Plugin Frontend - bundle.js serving, mount/unmount lifecycle
+- Plugin Sidebar Integration - health indicators, enabled plugin display
+- Plugin Manager UI - list, toggle, view logs, view details
+- Plugin Key-Value Storage - HTTP API at `/api/plugins/:id/kv` (not socket-based)
+- Plugin API Endpoints - full REST API for management
+- Plugin Observability - database-backed logs, event tracking
+- Plugin Language Support - Rust and Python support verified
+- Plugin Security - path traversal prevention, 30s timeout, authentication, namespace isolation
+
+**PARTIALLY IMPLEMENTED:**
+- Plugin Supervision - methods exist (`check_plugin_health`, `restart_plugin_with_backoff`) but no automatic monitoring loop
+
+**NOT IMPLEMENTED:**
+- Automatic crash detection and restart - supervision methods not called automatically
+- TORIS integration - TORIS system not yet set up
+- File-based supervisor logs - uses standard tracing instead
+
 ## ADDED Requirements
 
 ### Requirement: Plugin Process Isolation
@@ -53,33 +78,37 @@ The system SHALL expect plugins to implement a standardized message protocol.
 - **THEN** it listens for and handles messages
 
 #### Scenario: Plugin handles HTTP request
-- **WHEN** a plugin receives an HTTP message
+- **WHEN** a plugin receives an HTTP message via socket
 - **THEN** it returns an HTTP response with status, headers, and body
 
-#### Scenario: Plugin handles KV operation
-- **WHEN** a plugin receives a KV message (get/set/delete)
-- **THEN** it performs the operation and returns the result
+#### Scenario: Plugin accesses KV storage
+- **WHEN** a plugin needs persistent storage
+- **THEN** it makes HTTP POST requests to `/api/plugins/:id/kv` (not via socket)
 
-### Requirement: Plugin Supervision
-The system SHALL monitor plugin processes and restart them on failure.
+### Requirement: Plugin Supervision [DEFERRED]
+The system SHALL provide methods for monitoring and restarting plugins, but automatic supervision is not yet implemented.
 
-#### Scenario: Monitor plugin health
-- **WHEN** a plugin is running
-- **THEN** the system checks its socket status periodically
+**Implementation Status:** Methods exist (`check_plugin_health`, `restart_plugin_with_backoff`) but no monitoring loop runs automatically. Manual restart capability is available.
 
-#### Scenario: Detect plugin crash
-- **WHEN** a plugin process dies
-- **THEN** the system detects the crash via process monitoring
+#### Scenario: Monitor plugin health [DEFERRED]
+- **STATUS:** Method implemented but not called automatically
+- **WHEN** `check_plugin_health()` is called manually
+- **THEN** the system checks if socket exists and process is running (Unix only)
 
-#### Scenario: Restart crashed plugin
-- **WHEN** a plugin crashes
+#### Scenario: Detect plugin crash [NOT IMPLEMENTED]
+- **STATUS:** No automatic crash detection
+- **PLANNED:** Process monitoring via PID or process exit events
+
+#### Scenario: Restart crashed plugin [PARTIAL]
+- **STATUS:** Method implemented but not called automatically
+- **WHEN** `restart_plugin_with_backoff()` is called manually
 - **THEN** the system waits with exponential backoff (1s, 2s, 4s, 8s, 16s)
 - **THEN** the system attempts to restart the plugin
 
-#### Scenario: Disable unstable plugin
-- **WHEN** a plugin crashes 10 consecutive times
-- **THEN** the system disables the plugin
-- **THEN** the system logs an event and writes to the database
+#### Scenario: Disable unstable plugin [PARTIAL]
+- **STATUS:** Logic exists but not triggered automatically
+- **WHEN** restart count exceeds 10 (if automatic restart were implemented)
+- **THEN** the system would disable the plugin and log an event
 
 ### Requirement: Plugin Lifecycle
 The system SHALL support enabling and disabling plugins by starting/stopping their processes.
@@ -87,6 +116,7 @@ The system SHALL support enabling and disabling plugins by starting/stopping the
 #### Scenario: Enable plugin
 - **WHEN** `POST /api/plugins/:id/enable` is called for a disabled plugin
 - **THEN** the plugin process is spawned
+- **THEN** the system waits up to 2 seconds for the socket to become available
 - **THEN** the plugin's routes become available
 - **THEN** the plugin appears in the sidebar
 
@@ -110,9 +140,10 @@ The system SHALL support enabling and disabling plugins by starting/stopping the
 The system SHALL register plugin-provided routes under the plugin's configured path.
 
 #### Scenario: Register plugin routes
-- **WHEN** an enabled plugin declares a route prefix (e.g., `/acme`)
-- **THEN** requests to `/plugins/acme/*` are forwarded to the plugin
-- **THEN** the full path is passed to the plugin (e.g., `/acme/certificate`)
+- **WHEN** an enabled plugin declares a route prefix (e.g., `/hello-plugin`)
+- **THEN** requests to `/api/plugins/route/hello-plugin/*` are forwarded to the plugin
+- **THEN** the remaining path is passed to the plugin (e.g., `/some/path`)
+- **THEN** query strings are preserved and passed to the plugin
 
 #### Scenario: Disabled plugin routes
 - **WHEN** a plugin is disabled
@@ -121,6 +152,7 @@ The system SHALL register plugin-provided routes under the plugin's configured p
 #### Scenario: Plugin returns HTTP response
 - **WHEN** a plugin handles a request successfully
 - **THEN** the system returns the plugin's response (status, headers, body) to the client
+- **THEN** responses have a 30-second timeout to prevent hanging on unresponsive plugins
 
 ### Requirement: Plugin Frontend
 The system SHALL serve plugin frontend bundles and render them in a container.
@@ -178,27 +210,55 @@ The system SHALL provide a page to view and manage installed plugins.
 - **THEN** a details panel shows metadata (author, description, version)
 
 ### Requirement: Plugin Key-Value Storage
-The system SHALL provide plugins with isolated key-value storage.
+The system SHALL provide plugins with isolated key-value storage via HTTP API.
+
+**Implementation:** KV operations use HTTP endpoint `/api/plugins/:id/kv` with JSON payloads, NOT socket messages. This allows plugins to make authenticated HTTP requests for storage.
 
 #### Scenario: Store value
-- **WHEN** a plugin sends a KV set message
+- **WHEN** a plugin sends `POST /api/plugins/:id/kv` with `{"action": "set", "key": "...", "value": "..."}`
 - **THEN** the value is stored in the plugin's namespace in the database
 
 #### Scenario: Retrieve value
-- **WHEN** a plugin sends a KV get message
-- **THEN** the value from the plugin's namespace is returned
+- **WHEN** a plugin sends `POST /api/plugins/:id/kv` with `{"action": "get", "key": "..."}`
+- **THEN** the value from the plugin's namespace is returned in response JSON
 
 #### Scenario: Delete value
-- **WHEN** a plugin sends a KV delete message
+- **WHEN** a plugin sends `POST /api/plugins/:id/kv` with `{"action": "delete", "key": "..."}`
 - **THEN** the value is removed from the database
 
 #### Scenario: Namespace isolation
 - **WHEN** two plugins use the same key
-- **THEN** each plugin sees only its own value
+- **THEN** each plugin sees only its own value (enforced by plugin_id in database)
 
 #### Scenario: KV persistence
 - **WHEN** the server restarts
-- **THEN** plugin KV data persists
+- **THEN** plugin KV data persists in SQLite database
+
+### Requirement: Plugin Security
+The system SHALL enforce security constraints on plugin operations.
+
+#### Scenario: Path traversal prevention
+- **WHEN** a plugin route request contains `..` or `/` in the route segment
+- **THEN** the request is rejected with 400 Bad Request
+
+#### Scenario: Response timeout
+- **WHEN** a plugin takes longer than 30 seconds to respond
+- **THEN** the request is terminated and client receives a timeout error
+
+#### Scenario: Authenticated access
+- **WHEN** any plugin route or management endpoint is accessed
+- **THEN** the request must be authenticated (admin or client user)
+
+#### Scenario: KV namespace isolation
+- **WHEN** a plugin accesses KV storage
+- **THEN** operations are restricted to its own namespace by plugin_id
+
+#### Scenario: Metadata validation
+- **WHEN** a plugin's metadata JSON is parsed
+- **THEN** the plugin ID must be alphanumeric with hyphens only
+- **THEN** the route must start with `/` and not contain `..`
+- **THEN** name and author fields must be under 100 characters
+- **THEN** invalid metadata causes the plugin to be skipped with a logged error
 
 ### Requirement: Plugin API Endpoints
 The system SHALL expose API endpoints for plugin management.
@@ -220,25 +280,27 @@ The system SHALL expose API endpoints for plugin management.
 - **THEN** the plugin's logs are returned (paginated)
 
 ### Requirement: Plugin Observability
-The system SHALL provide structured logging for TORIS integration.
+The system SHALL provide structured logging for plugin operations.
+
+**TORIS Integration Status:** TORIS is planned but not yet set up. Log infrastructure exists but TORIS monitoring is not active.
 
 #### Scenario: Write plugin logs
 - **WHEN** a plugin writes a log message
-- **THEN** the message is written to `/var/log/toru/plugins/<plugin-id>.log`
-- **THEN** the message is in JSON format (timestamp, level, message, optional error)
+- **THEN** the message is written to database-backed log store
+- **THEN** logs are retrievable via `/api/plugins/:id/logs` endpoint
 
-#### Scenario: Write supervisor logs
-- **WHEN** the plugin supervisor performs an action (spawn, kill, restart)
-- **THEN** an event is written to `/var/log/toru/plugin-supervisor.log`
+#### Scenario: Write supervisor logs [PARTIAL]
+- **WHEN** the plugin supervisor performs an action (spawn, kill)
+- **THEN** events are logged via standard Rust logging (tracing crate)
+- **NOTE:** File-based supervisor logs to `/var/log/toru/plugin-supervisor.log` not implemented
 
 #### Scenario: Log plugin events
 - **WHEN** a plugin event occurs (started, stopped, crashed, restarted, disabled)
 - **THEN** the event is written to the `plugin_events` table in the database
 
-#### Scenario: TORIS reads logs
-- **WHEN** TORIS watches the log directories
-- **THEN** it can read and parse plugin logs
-- **THEN** it can monitor plugin health and activity
+#### Scenario: TORIS reads logs [NOT IMPLEMENTED]
+- **STATUS:** TORIS not yet set up
+- **PLANNED:** TORIS will watch log directories and monitor plugin health
 
 ### Requirement: Plugin Language Support
 The system SHALL support plugins written in Rust and Python (MVP), with extensibility to other languages.
